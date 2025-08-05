@@ -648,10 +648,12 @@ def render_sidebar():
             if 'job_title' in st.session_state.job_details:
                 st.write(f"**Position:** {st.session_state.job_details['job_title']}")
         
-        # Interview progress if in progress
-      if st.session_state.stage == 'interview' and st.session_state.questions:
-        progress = min(st.session_state.current_question_idx / len(st.session_state.questions), 1.0)
+        # Interview progress if in progress - FIXED VERSION
+        if st.session_state.stage == 'interview' and st.session_state.questions:
+            progress = min(st.session_state.current_question_idx / len(st.session_state.questions), 1.0)
+            progress = max(progress, 0.0)
             st.progress(progress)
+            st.write(f"Questions completed: {st.session_state.current_question_idx}/{len(st.session_state.questions)}")
         
         st.divider()
         
@@ -674,7 +676,7 @@ def render_sidebar():
                 if key in st.session_state:
                     del st.session_state[key]
             st.rerun()
-
+            
 # Stage Functions
 def render_upload_stage():
     """Render resume upload stage."""
