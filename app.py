@@ -1,4 +1,4 @@
-# AI Interview Simulator - Complete Enhanced Version with HEARS Method & Timer
+# AI Interview Simulator - Fixed Version
 # app.py
 
 import streamlit as st
@@ -273,6 +273,31 @@ def load_custom_css():
         margin: 1rem 0;
     }
     
+    /* Duration selection styling */
+    .duration-button {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 0.5rem;
+    }
+    
+    .duration-button:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+    }
+    
+    .duration-button.selected {
+        border-color: var(--primary-color);
+        background: linear-gradient(45deg, #f8fafc, #e0e7ff);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+    
     /* HEARS feedback styling */
     .hears-section {
         background: white;
@@ -323,7 +348,7 @@ class GeminiClient:
     def generate_questions(self, resume_text: str, job_details: Dict, num_questions: int) -> List[str]:
         """Generate behavioral interview questions based on resume and job details."""
         prompt = f"""
-        Based on the following resume and job description, generate exactly {num_questions} behavioral interview questions.
+        You are an expert behavioral interviewer. Generate exactly {num_questions} behavioral interview questions based on the resume and job description provided.
 
         RESUME CONTENT:
         {resume_text}
@@ -333,36 +358,78 @@ class GeminiClient:
         - Company: {job_details.get('company_name', 'N/A')}
         - Description: {job_details.get('job_description', 'N/A')}
         - Experience Level: {job_details.get('experience_years', 0)} years
-        - Interview Duration: {job_details.get('duration', 30)} minutes
+        - Interview Duration: {job_details.get('duration', 15)} minutes
 
         REQUIREMENTS:
-        1. Focus on HEARS method (Headline, Events, Actions, Results, Significance)
-        2. Tailor questions to candidate's background and job requirements
-        3. Include variety: leadership, problem-solving, conflict resolution, teamwork, adaptability, communication
-        4. Match difficulty to experience level and interview duration
-        5. Make questions specific and actionable
-        6. Ensure questions encourage detailed responses covering all HEARS elements
+        1. Generate exactly {num_questions} questions - no more, no less
+        2. Focus on HEARS method (Headline, Events, Actions, Results, Significance)
+        3. Tailor questions to candidate's background and job requirements
+        4. Include variety: leadership, problem-solving, conflict resolution, teamwork, adaptability, communication
+        5. Match difficulty to experience level and interview duration
+        6. Make questions specific and actionable
+        7. Ensure questions encourage detailed responses covering all HEARS elements
 
-        Return ONLY a JSON array of exactly {num_questions} questions:
-        ["Question 1 text here", "Question 2 text here", ...]
+        IMPORTANT: Return your response in this EXACT format as a valid JSON array:
+        ["Question 1 text here", "Question 2 text here", "Question 3 text here"]
+
+        Do not include any other text, explanations, or formatting. Just the JSON array with exactly {num_questions} questions.
         """
         
         try:
             response = self.model.generate_content(prompt)
             questions_text = response.text.strip()
             
-            # Extract JSON from response
-            if questions_text.startswith('[') and questions_text.endswith(']'):
-                questions = json.loads(questions_text)
-                return questions[:num_questions]
-            else:
-                # Fallback parsing
+            # Debug print
+            print(f"API Response: {questions_text}")
+            
+            # Clean up the response text
+            questions_text = questions_text.strip()
+            
+            # Remove any markdown formatting if present
+            if questions_text.startswith('```'):
                 lines = questions_text.split('\n')
-                questions = []
-                for line in lines:
-                    if line.strip().startswith('"') and line.strip().endswith('"'):
-                        questions.append(line.strip()[1:-1])
-                return questions[:num_questions]
+                questions_text = '\n'.join(lines[1:-1]) if len(lines) > 2 else questions_text
+            
+            # Try to extract JSON array
+            start_idx = questions_text.find('[')
+            end_idx = questions_text.rfind(']') + 1
+            
+            if start_idx != -1 and end_idx > start_idx:
+                json_text = questions_text[start_idx:end_idx]
+                try:
+                    questions = json.loads(json_text)
+                    if isinstance(questions, list) and len(questions) >= num_questions:
+                        return questions[:num_questions]
+                    elif isinstance(questions, list):
+                        # If we got fewer questions than expected, pad with fallback
+                        fallback = self._get_fallback_questions(num_questions - len(questions))
+                        return questions + fallback
+                except json.JSONDecodeError as e:
+                    print(f"JSON decode error: {e}")
+                    pass
+            
+            # Enhanced fallback parsing
+            questions = []
+            lines = questions_text.split('\n')
+            
+            for line in lines:
+                line = line.strip()
+                # Try different patterns
+                if line.startswith('"') and line.endswith('",'):
+                    questions.append(line[1:-2])
+                elif line.startswith('"') and line.endswith('"'):
+                    questions.append(line[1:-1])
+                elif line.startswith('- '):
+                    questions.append(line[2:])
+                elif line.startswith(f'{len(questions)+1}.'):
+                    questions.append(line[len(f'{len(questions)+1}.'):].strip())
+            
+            # If we still don't have enough questions, use fallbacks
+            if len(questions) < num_questions:
+                fallback_questions = self._get_fallback_questions(num_questions - len(questions))
+                questions.extend(fallback_questions)
+            
+            return questions[:num_questions]
                 
         except Exception as e:
             st.error(f"Error generating questions: {str(e)}")
@@ -444,7 +511,7 @@ class GeminiClient:
 
         INTERVIEW RESPONSES: {responses_text}
         JOB CONTEXT: {job_details}
-        INTERVIEW DURATION: {job_details.get('duration', 30)} minutes
+        INTERVIEW DURATION: {job_details.get('duration', 15)} minutes
         TOTAL QUESTIONS: {len(all_responses)}
 
         Provide comprehensive feedback in this EXACT format:
@@ -507,18 +574,18 @@ class GeminiClient:
     def _get_fallback_questions(self, num_questions: int) -> List[str]:
         """Fallback questions if API fails."""
         fallback_questions = [
-            "Tell me about a time when you had to lead a team through a difficult project. What was your approach?",
-            "Describe a situation where you had to solve a complex problem with limited resources. How did you handle it?",
-            "Can you share an example of when you had to work with a difficult team member or stakeholder?",
-            "Tell me about a time when you had to adapt quickly to a significant change in your work environment.",
-            "Describe a situation where you made a mistake. How did you handle it and what did you learn?",
-            "Give me an example of when you had to influence others without having direct authority over them.",
+            "Tell me about a time when you had to lead a team through a difficult project. What was your approach and what were the results?",
+            "Describe a situation where you had to solve a complex problem with limited resources. How did you handle it and what did you learn?",
+            "Can you share an example of when you had to work with a difficult team member or stakeholder? What actions did you take?",
+            "Tell me about a time when you had to adapt quickly to a significant change in your work environment. What was the outcome?",
+            "Describe a situation where you made a mistake. How did you handle it and what did you learn from the experience?",
+            "Give me an example of when you had to influence others without having direct authority over them. What was the result?",
             "Tell me about a time when you had to work under tight deadlines. How did you prioritize and manage your time?",
-            "Describe a situation where you had to learn a new skill quickly to complete a project.",
-            "Can you share an example of when you had to give difficult feedback to a colleague?",
-            "Tell me about a time when you had to make a decision with incomplete information.",
-            "Describe a situation where you had to manage competing priorities from different stakeholders.",
-            "Give me an example of when you went above and beyond what was expected in your role."
+            "Describe a situation where you had to learn a new skill quickly to complete a project. What was the impact?",
+            "Can you share an example of when you had to give difficult feedback to a colleague? How did you approach it?",
+            "Tell me about a time when you had to make a decision with incomplete information. What was the outcome?",
+            "Describe a situation where you had to manage competing priorities from different stakeholders. How did you handle it?",
+            "Give me an example of when you went above and beyond what was expected in your role. What were the results?"
         ]
         
         return fallback_questions[:num_questions]
@@ -654,8 +721,8 @@ def initialize_session_state():
         'stage': 'upload',  # upload, details, interview, feedback
         'resume_text': "",
         'job_details': {},
-        'interview_duration': 30,  # minutes
-        'num_questions': 6,
+        'interview_duration': 15,  # Default to 15 minutes
+        'num_questions': 3,  # Default to 3 questions
         'questions': [],
         'current_question_idx': 0,
         'conversation': [],
@@ -665,7 +732,8 @@ def initialize_session_state():
         'interview_completed': False,
         'timer': None,
         'question_timer_start': None,
-        'gemini_client': None
+        'gemini_client': None,
+        'duration_selected': False  # Track if user has selected a duration
     }
     
     for key, value in defaults.items():
@@ -815,9 +883,12 @@ def render_sidebar():
         
         # Restart option
         if st.button("🔄 Start New Interview", type="secondary"):
-            for key in ['stage', 'resume_text', 'job_details', 'questions', 'current_question_idx', 'conversation', 'question_responses', 'individual_feedback', 'overall_feedback', 'interview_completed', 'timer', 'question_timer_start']:
+            for key in ['stage', 'resume_text', 'job_details', 'questions', 'current_question_idx', 'conversation', 'question_responses', 'individual_feedback', 'overall_feedback', 'interview_completed', 'timer', 'question_timer_start', 'duration_selected']:
                 if key in st.session_state:
                     del st.session_state[key]
+            # Reset defaults
+            st.session_state.interview_duration = 15
+            st.session_state.num_questions = 3
             st.rerun()
 
 # Stage Functions
@@ -864,32 +935,41 @@ def render_details_stage():
     st.subheader("⏱️ Interview Duration")
     st.write("Choose how long you'd like your practice interview to be:")
     
-    # Duration selection with columns
-    duration_col1, duration_col2, duration_col3, duration_col4 = st.columns(4)
+    # Duration selection with radio buttons for better state management
+    duration_options = {
+        "15 Minutes (3 Questions) - Quick practice": (15, 3),
+        "30 Minutes (6 Questions) - Standard length": (30, 6),
+        "45 Minutes (9 Questions) - Comprehensive": (45, 9),
+        "60 Minutes (12 Questions) - Extended practice": (60, 12)
+    }
     
-    with duration_col1:
-        if st.button("📅 15 Minutes\n3 Questions\nQuick practice", key="dur_15"):
-            st.session_state.interview_duration = 15
-            st.session_state.num_questions = 3
+    # Determine current selection for radio button
+    current_selection = None
+    for option, (duration, questions) in duration_options.items():
+        if st.session_state.interview_duration == duration and st.session_state.num_questions == questions:
+            current_selection = option
+            break
     
-    with duration_col2:
-        if st.button("📅 30 Minutes\n6 Questions\nStandard length", key="dur_30"):
-            st.session_state.interview_duration = 30
-            st.session_state.num_questions = 6
+    # If no current selection found, default to first option
+    if current_selection is None:
+        current_selection = list(duration_options.keys())[0]
+        st.session_state.interview_duration = 15
+        st.session_state.num_questions = 3
     
-    with duration_col3:
-        if st.button("📅 45 Minutes\n9 Questions\nComprehensive", key="dur_45"):
-            st.session_state.interview_duration = 45
-            st.session_state.num_questions = 9
+    selected_option = st.radio(
+        "Select interview duration:",
+        options=list(duration_options.keys()),
+        index=list(duration_options.keys()).index(current_selection),
+        key="duration_radio"
+    )
     
-    with duration_col4:
-        if st.button("📅 60 Minutes\n12 Questions\nExtended practice", key="dur_60"):
-            st.session_state.interview_duration = 60
-            st.session_state.num_questions = 12
+    # Update session state based on selection
+    duration, num_questions = duration_options[selected_option]
+    st.session_state.interview_duration = duration
+    st.session_state.num_questions = num_questions
+    st.session_state.duration_selected = True
     
-    # Show selected duration
-    if st.session_state.interview_duration:
-        st.success(f"✅ Selected: {st.session_state.interview_duration} minutes ({st.session_state.num_questions} questions)")
+    st.success(f"✅ Selected: {duration} minutes ({num_questions} questions)")
     
     st.divider()
     
@@ -922,8 +1002,6 @@ def render_details_stage():
         if submitted:
             if not job_title or not company_name or not job_description:
                 st.error("Please fill in all required fields (marked with *)")
-            elif not st.session_state.interview_duration:
-                st.error("Please select an interview duration first")
             else:
                 job_details = {
                     'job_title': job_title,
@@ -944,17 +1022,24 @@ def render_details_stage():
                             job_details,
                             st.session_state.num_questions
                         )
+                        
+                        # Debugging: Show what questions were generated
+                        st.write(f"DEBUG: Generated {len(questions)} questions:")
+                        for i, q in enumerate(questions):
+                            st.write(f"{i+1}. {q}")
+                        
                         st.session_state.questions = questions
                         
                         # Initialize timer
                         st.session_state.timer = InterviewTimer(st.session_state.interview_duration)
                         
                         st.session_state.stage = 'interview'
-                        st.success(f"Questions generated successfully! Starting your {st.session_state.interview_duration}-minute interview...")
-                        time.sleep(2)
+                        st.success(f"Questions generated successfully! Starting your {st.session_state.interview_duration}-minute interview with {len(questions)} questions...")
+                        time.sleep(3)  # Give user time to see the debug info
                         st.rerun()
                     except Exception as e:
                         st.error(f"Error generating questions: {str(e)}")
+                        st.error("Please try again or contact support if the issue persists.")
     
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -1233,9 +1318,12 @@ def render_feedback_stage():
     with col3:
         if st.button("📝 New Position", type="secondary"):
             # Reset everything for completely new interview
-            for key in ['stage', 'job_details', 'interview_duration', 'num_questions', 'questions', 'current_question_idx', 'conversation', 'question_responses', 'individual_feedback', 'overall_feedback', 'interview_completed', 'timer', 'question_timer_start']:
+            for key in ['stage', 'job_details', 'interview_duration', 'num_questions', 'questions', 'current_question_idx', 'conversation', 'question_responses', 'individual_feedback', 'overall_feedback', 'interview_completed', 'timer', 'question_timer_start', 'duration_selected']:
                 if key in st.session_state:
                     del st.session_state[key]
+            # Reset to defaults
+            st.session_state.interview_duration = 15
+            st.session_state.num_questions = 3
             st.session_state.stage = 'details'
             st.rerun()
     
@@ -1245,6 +1333,9 @@ def render_feedback_stage():
             for key in list(st.session_state.keys()):
                 if key != 'gemini_client':
                     del st.session_state[key]
+            # Reset to defaults
+            st.session_state.interview_duration = 15
+            st.session_state.num_questions = 3
             st.rerun()
 
 # Main Application
