@@ -649,10 +649,9 @@ def render_sidebar():
                 st.write(f"**Position:** {st.session_state.job_details['job_title']}")
         
         # Interview progress if in progress
-        if st.session_state.stage == 'interview' and st.session_state.questions:
-            progress = (st.session_state.current_question_idx + 1) / len(st.session_state.questions)
+      if st.session_state.stage == 'interview' and st.session_state.questions:
+        progress = min(st.session_state.current_question_idx / len(st.session_state.questions), 1.0)
             st.progress(progress)
-            st.write(f"Questions completed: {st.session_state.current_question_idx}/{len(st.session_state.questions)}")
         
         st.divider()
         
