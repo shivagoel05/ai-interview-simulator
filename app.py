@@ -426,7 +426,7 @@ def render_header():
     """, unsafe_allow_html=True)
 
 def render_progress_stepper():
-    """Render simplified progress stepper that works with Streamlit."""
+    """Render enhanced progress stepper that looks more compelling."""
     stages = ['upload', 'details', 'interview', 'feedback']
     stage_names = ['Upload Resume', 'Job Details', 'Interview', 'Feedback']
     stage_icons = ['📄', '📝', '🎤', '📊']
@@ -435,20 +435,72 @@ def render_progress_stepper():
     # Calculate progress percentage
     progress_value = current_stage_idx / (len(stages) - 1) if len(stages) > 1 else 0
     
-    # Simple card container
-    st.markdown("""
-    <div style="background: white; border-radius: 16px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #F3F4F6;">
-        <div style="text-align: center; margin-bottom: 2rem;">
-            <h2 style="font-size: 1.25rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Interview Progress</h2>
-            <p style="font-size: 0.875rem; color: #6B7280;">Follow the steps to complete your practice interview</p>
+    # Enhanced card container with better styling
+    st.markdown(f"""
+    <div style="
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
+        backdrop-filter: blur(20px);
+        border-radius: 20px; 
+        padding: 3rem 2rem; 
+        margin-bottom: 3rem; 
+        box-shadow: 
+            0 24px 48px rgba(0, 0, 0, 0.08),
+            0 8px 16px rgba(0, 0, 0, 0.04),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(245, 158, 11, 0.1);
+        position: relative;
+        overflow: hidden;
+    ">
+        <div style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #F59E0B 0%, #FBB042 50%, #FBBF24 100%);
+        "></div>
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <h2 style="
+                font-size: 1.75rem; 
+                font-weight: 700; 
+                color: #374151; 
+                margin-bottom: 0.75rem;
+                letter-spacing: -0.02em;
+            ">Interview Progress</h2>
+            <p style="
+                font-size: 1rem; 
+                color: #6B7280;
+                font-weight: 500;
+                max-width: 500px;
+                margin: 0 auto;
+                line-height: 1.5;
+            ">Follow the steps to complete your practice interview journey</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
-    # Use Streamlit's native progress bar
-    st.progress(progress_value)
+    # Enhanced progress bar
+    st.markdown(f"""
+    <div style="
+        background: #F3F4F6;
+        height: 8px;
+        border-radius: 4px;
+        margin-bottom: 2rem;
+        overflow: hidden;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    ">
+        <div style="
+            height: 100%;
+            background: linear-gradient(90deg, #F59E0B 0%, #FBB042 50%, #FBBF24 100%);
+            border-radius: 4px;
+            width: {progress_value * 100}%;
+            transition: width 0.6s ease-out;
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+        "></div>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # Simple step indicators using columns
+    # Enhanced step indicators using columns
     cols = st.columns(len(stages))
     
     for i, (stage, name, icon) in enumerate(zip(stages, stage_names, stage_icons)):
@@ -456,44 +508,145 @@ def render_progress_stepper():
             if i < current_stage_idx:
                 # Completed step
                 st.markdown(f"""
-                <div style="text-align: center; padding: 1rem;">
-                    <div style="width: 40px; height: 40px; background: #10B981; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem auto; color: white; font-weight: 600;">
+                <div style="text-align: center; padding: 1.5rem 0.5rem;">
+                    <div style="
+                        width: 56px; 
+                        height: 56px; 
+                        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+                        border-radius: 50%; 
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                        margin: 0 auto 1rem auto; 
+                        color: white; 
+                        font-weight: 700;
+                        font-size: 1.25rem;
+                        box-shadow: 
+                            0 8px 16px rgba(16, 185, 129, 0.3),
+                            0 4px 8px rgba(16, 185, 129, 0.2);
+                        border: 3px solid rgba(255, 255, 255, 0.9);
+                    ">
                         ✓
                     </div>
-                    <span style="font-size: 0.75rem; font-weight: 600; color: #374151;">{name}</span>
+                    <div style="
+                        font-size: 0.875rem; 
+                        font-weight: 700; 
+                        color: #065F46;
+                        text-transform: uppercase;
+                        letter-spacing: 0.05em;
+                    ">{name}</div>
+                    <div style="
+                        font-size: 0.75rem; 
+                        color: #059669;
+                        margin-top: 0.25rem;
+                        font-weight: 600;
+                    ">Completed</div>
                 </div>
                 """, unsafe_allow_html=True)
             elif i == current_stage_idx:
                 # Active step
                 st.markdown(f"""
-                <div style="text-align: center; padding: 1rem;">
-                    <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #F59E0B 0%, #FBB042 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem auto; color: white; font-weight: 600; box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);">
+                <div style="text-align: center; padding: 1.5rem 0.5rem;">
+                    <div style="
+                        width: 56px; 
+                        height: 56px; 
+                        background: linear-gradient(135deg, #F59E0B 0%, #FBB042 100%);
+                        border-radius: 50%; 
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                        margin: 0 auto 1rem auto; 
+                        color: white; 
+                        font-weight: 700;
+                        font-size: 1.25rem;
+                        box-shadow: 
+                            0 12px 24px rgba(245, 158, 11, 0.4),
+                            0 4px 8px rgba(245, 158, 11, 0.3);
+                        border: 3px solid rgba(255, 255, 255, 0.9);
+                        animation: pulse-glow 2s infinite;
+                    ">
                         {icon}
                     </div>
-                    <span style="font-size: 0.75rem; font-weight: 600; color: #374151;">{name}</span>
+                    <div style="
+                        font-size: 0.875rem; 
+                        font-weight: 700; 
+                        color: #92400E;
+                        text-transform: uppercase;
+                        letter-spacing: 0.05em;
+                    ">{name}</div>
+                    <div style="
+                        font-size: 0.75rem; 
+                        color: #F59E0B;
+                        margin-top: 0.25rem;
+                        font-weight: 600;
+                    ">In Progress</div>
                 </div>
+                <style>
+                @keyframes pulse-glow {{
+                    0%, 100% {{ 
+                        box-shadow: 
+                            0 12px 24px rgba(245, 158, 11, 0.4),
+                            0 4px 8px rgba(245, 158, 11, 0.3);
+                    }}
+                    50% {{ 
+                        box-shadow: 
+                            0 16px 32px rgba(245, 158, 11, 0.5),
+                            0 6px 12px rgba(245, 158, 11, 0.4);
+                        transform: scale(1.05);
+                    }}
+                }}
+                </style>
                 """, unsafe_allow_html=True)
             else:
                 # Locked step
                 st.markdown(f"""
-                <div style="text-align: center; padding: 1rem;">
-                    <div style="width: 40px; height: 40px; background: #F3F4F6; border: 3px solid #E5E7EB; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem auto; color: #9CA3AF; font-weight: 600;">
+                <div style="text-align: center; padding: 1.5rem 0.5rem;">
+                    <div style="
+                        width: 56px; 
+                        height: 56px; 
+                        background: #F9FAFB;
+                        border: 3px solid #E5E7EB;
+                        border-radius: 50%; 
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                        margin: 0 auto 1rem auto; 
+                        color: #9CA3AF; 
+                        font-weight: 600;
+                        font-size: 1.25rem;
+                        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+                    ">
                         {icon}
                     </div>
-                    <span style="font-size: 0.75rem; font-weight: 600; color: #9CA3AF;">{name}</span>
+                    <div style="
+                        font-size: 0.875rem; 
+                        font-weight: 600; 
+                        color: #9CA3AF;
+                        text-transform: uppercase;
+                        letter-spacing: 0.05em;
+                    ">{name}</div>
+                    <div style="
+                        font-size: 0.75rem; 
+                        color: #D1D5DB;
+                        margin-top: 0.25rem;
+                        font-weight: 500;
+                    ">Pending</div>
                 </div>
                 """, unsafe_allow_html=True)
 
 def render_upload_stage():
-    """Render resume upload stage."""
+    """Render resume upload stage with enhanced design."""
     st.markdown('<div class="content-card animate-fade-in">', unsafe_allow_html=True)
     
     st.markdown("""
     <div class="section-header">
         <h2 class="section-title">📄 Upload Your Resume</h2>
-        <p class="section-subtitle">Start by uploading your resume to get personalized interview questions</p>
+        <p class="section-subtitle">Start by uploading your resume to get personalized interview questions tailored to your experience</p>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Add some spacing
+    st.markdown("<br>", unsafe_allow_html=True)
     
     uploaded_file = st.file_uploader(
         "Choose your resume file",
@@ -510,15 +663,22 @@ def render_upload_stage():
                 st.session_state.resume_text = result
                 
                 st.markdown("""
-                <div class="status-message status-success">
-                    <span>✅</span>
+                <div style="background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%); color: #065F46; padding: 1.5rem 2rem; border-radius: 16px; margin: 2rem 0; font-weight: 600; box-shadow: 0 8px 16px rgba(16, 185, 129, 0.2); border: 1px solid #6EE7B7; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">✅</span>
                     <span>Resume uploaded and processed successfully!</span>
                 </div>
                 """, unsafe_allow_html=True)
                 
                 with st.expander("📖 Resume Preview", expanded=False):
                     preview_text = result[:500] + "..." if len(result) > 500 else result
-                    st.text(preview_text)
+                    st.markdown(f"""
+                    <div style="background: #F8FAFC; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #3B82F6; font-family: 'Monaco', 'Menlo', monospace; font-size: 0.875rem; line-height: 1.6; color: #374151;">
+                        {preview_text}
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Add spacing before button
+                st.markdown("<br><br>", unsafe_allow_html=True)
                 
                 col1, col2, col3 = st.columns([1, 2, 1])
                 with col2:
@@ -527,11 +687,40 @@ def render_upload_stage():
                         st.rerun()
             else:
                 st.markdown(f"""
-                <div class="status-message status-error">
-                    <span>❌</span>
+                <div style="background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%); color: #991B1B; padding: 1.5rem 2rem; border-radius: 16px; margin: 2rem 0; font-weight: 600; box-shadow: 0 8px 16px rgba(239, 68, 68, 0.2); border: 1px solid #FCA5A5; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">❌</span>
                     <span>{result}</span>
                 </div>
                 """, unsafe_allow_html=True)
+    else:
+        # Add tips section when no file is uploaded
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 176, 66, 0.05) 100%); border-radius: 16px; padding: 2rem; margin: 2rem 0; border-left: 6px solid #F59E0B;">
+            <h4 style="margin: 0 0 1.5rem 0; color: #92400E; font-size: 1.125rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 1.5rem;">💡</span>
+                Tips for Best Results
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; color: #78350F; line-height: 1.6;">
+                <div>
+                    <div style="font-weight: 600; margin-bottom: 0.5rem;">📋 Content Quality</div>
+                    <div style="font-size: 0.875rem;">Ensure your resume is up-to-date with recent experience and specific achievements</div>
+                </div>
+                <div>
+                    <div style="font-weight: 600; margin-bottom: 0.5rem;">📊 Quantifiable Results</div>
+                    <div style="font-size: 0.875rem;">Include metrics and numbers to showcase your impact and accomplishments</div>
+                </div>
+                <div>
+                    <div style="font-weight: 600; margin-bottom: 0.5rem;">🔧 Technical Skills</div>
+                    <div style="font-size: 0.875rem;">List relevant technologies, tools, and frameworks you've worked with</div>
+                </div>
+                <div>
+                    <div style="font-weight: 600; margin-bottom: 0.5rem;">📄 File Format</div>
+                    <div style="font-size: 0.875rem;">PDF format typically gives the best text extraction results</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
 
