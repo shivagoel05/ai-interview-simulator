@@ -1,4 +1,4 @@
-# AI Interview Simulator - Kurated.ai Style
+# AI Interview Simulator - Kurated.ai Style - FIXED VERSION
 # Simple structure: Just app.py + main.css in root directory
 
 import streamlit as st
@@ -145,8 +145,16 @@ class GeminiClient:
             st.error(f"Error generating questions: {str(e)}")
             return self._get_fallback_questions(num_questions)
     
-    def generate_individual_feedback(self, question: str, answer: str, job_details: Dict) -> str:
-        """Generate HEARS feedback for individual question."""
+    def generate_individual_feedback(self, question: str, answer: str, job_details: Dict, question_number: int) -> Dict:
+        """Generate HEARS feedback for individual question - FIXED VERSION."""
+        if not answer or answer.strip() == "" or answer == "[Question Skipped]":
+            return {
+                'question_number': question_number,
+                'success': False,
+                'feedback': "**Question was skipped** - No feedback available for skipped questions.",
+                'error': None
+            }
+        
         prompt = f"""
         Analyze this single interview question and answer using the HEARS methodology:
 
@@ -154,33 +162,93 @@ class GeminiClient:
         CANDIDATE'S ANSWER: {answer}
         JOB CONTEXT: {job_details.get('job_title', 'N/A')} at {job_details.get('company_name', 'N/A')}
 
-        Provide feedback in this format:
+        Provide comprehensive feedback in this EXACT format:
 
-        ## 🎯 Question Analysis
+        ## 🎯 HEARS Analysis for Question {question_number}
 
-        **H (Headline):** [Did they provide a clear situation summary? Rate 1-10]
-        **E (Events):** [Did they describe specific events/challenges? Rate 1-10]
-        **A (Actions):** [Did they detail their specific actions? Rate 1-10]
-        **R (Results):** [Did they share measurable outcomes? Rate 1-10]
-        **S (Significance):** [Did they demonstrate skills/learning? Rate 1-10]
+        ### **H (Headline) - Situation Summary**
+        **Score: X/10**
+        **Analysis:** [Detailed analysis of how well they provided a clear situation summary]
 
-        **Overall Score:** X/10
-        **Strengths:** [2-3 key strengths in this response]
-        **Areas for Improvement:** [1-2 specific suggestions]
+        ### **E (Events) - Challenges & Context**
+        **Score: X/10**
+        **Analysis:** [Detailed analysis of specific events/challenges described]
+
+        ### **A (Actions) - Detailed Actions Taken**
+        **Score: X/10**
+        **Analysis:** [Detailed analysis of the specific actions they took]
+
+        ### **R (Results) - Measurable Outcomes**
+        **Score: X/10**
+        **Analysis:** [Detailed analysis of measurable results and outcomes]
+
+        ### **S (Significance) - Skills & Learning**
+        **Score: X/10**
+        **Analysis:** [Detailed analysis of skills demonstrated and lessons learned]
+
+        ### **📊 Overall Assessment**
+        **Total HEARS Score: XX/50**
+        **Overall Rating: [Excellent/Good/Average/Needs Improvement]**
+
+        ### **✅ Key Strengths**
+        - [Specific strength 1 with example from their answer]
+        - [Specific strength 2 with example from their answer]
+        - [Specific strength 3 with example from their answer]
+
+        ### **🎯 Areas for Improvement**
+        - [Specific improvement area 1 with actionable suggestion]
+        - [Specific improvement area 2 with actionable suggestion]
+
+        ### **💡 Coaching Tips**
+        [2-3 specific, actionable tips for improving this type of response in future interviews]
+
+        IMPORTANT: Provide specific, detailed analysis with concrete examples from their answer. Be constructive and helpful.
         """
         
         try:
             response = self.model.generate_content(prompt)
-            return response.text.strip()
+            feedback_text = response.text.strip()
+            
+            if not feedback_text or len(feedback_text) < 50:
+                return {
+                    'question_number': question_number,
+                    'success': False,
+                    'feedback': "**Unable to generate detailed feedback** - Response too short or empty.",
+                    'error': "Empty or insufficient feedback generated"
+                }
+            
+            return {
+                'question_number': question_number,
+                'success': True,
+                'feedback': feedback_text,
+                'error': None
+            }
+            
         except Exception as e:
-            return f"Unable to generate detailed feedback for this question."
+            error_msg = str(e)
+            return {
+                'question_number': question_number,
+                'success': False,
+                'feedback': f"**Unable to generate feedback due to technical error:**\n\n*Error: {error_msg}*\n\nPlease try again or contact support if this issue persists.",
+                'error': error_msg
+            }
     
-    def generate_overall_feedback(self, all_responses: List, job_details: Dict) -> str:
-        """Generate comprehensive HEARS methodology feedback."""
+    def generate_overall_feedback(self, all_responses: List, job_details: Dict) -> Dict:
+        """Generate comprehensive HEARS methodology feedback - FIXED VERSION."""
+        if not all_responses or len(all_responses) == 0:
+            return {
+                'success': False,
+                'feedback': "No interview responses available for analysis.",
+                'error': "Empty responses list"
+            }
+        
         responses_text = "\n\n".join([
             f"Q{i+1}: {response['question']}\nA{i+1}: {response['answer']}"
             for i, response in enumerate(all_responses)
         ])
+        
+        completed_questions = len([r for r in all_responses if r['answer'] != "[Question Skipped]"])
+        skipped_questions = len(all_responses) - completed_questions
         
         prompt = f"""
         Analyze this complete behavioral interview using the HEARS methodology:
@@ -189,63 +257,120 @@ class GeminiClient:
         JOB CONTEXT: {job_details}
         INTERVIEW DURATION: {job_details.get('duration', 15)} minutes
         TOTAL QUESTIONS: {len(all_responses)}
+        COMPLETED QUESTIONS: {completed_questions}
+        SKIPPED QUESTIONS: {skipped_questions}
 
         Provide comprehensive feedback in this EXACT format:
 
-        # 🎯 OVERALL INTERVIEW FEEDBACK REPORT
+        # 🎯 COMPREHENSIVE INTERVIEW FEEDBACK REPORT
 
-        ## **📰 HEADLINE ANALYSIS**
-        [How well did candidate provide situation summaries across all questions]
-        **Headline Score: X/10**
+        ## **📊 Interview Overview**
+        - **Position:** {job_details.get('job_title', 'N/A')}
+        - **Company:** {job_details.get('company_name', 'N/A')}
+        - **Questions Completed:** {completed_questions}/{len(all_responses)}
+        - **Interview Performance:** [Overall assessment]
 
-        ## **📅 EVENTS ANALYSIS**  
-        [Quality of situations/challenges described across all responses]
-        **Events Score: X/10**
-        • Key Event 1: [Brief description]
-        • Key Event 2: [Brief description] 
-        • Key Event 3: [Brief description]
+        ## **📰 HEADLINE ANALYSIS (H)**
+        **Score: X/10**
+        [Comprehensive analysis of situation summaries across all responses]
+        
+        **Key Observations:**
+        - [Specific observation 1]
+        - [Specific observation 2]
+        - [Specific observation 3]
 
-        ## **⚡ ACTIONS ANALYSIS**
-        [Depth and specificity of actions described]
-        **Actions Score: X/10**
-        • Strong Action Example: [Description]
-        • Area for Improvement: [Suggestion]
+        ## **📅 EVENTS ANALYSIS (E)**  
+        **Score: X/10**
+        [Comprehensive analysis of challenges/contexts described]
+        
+        **Notable Examples:**
+        - **Strong Event Description:** [Quote from responses]
+        - **Area for Improvement:** [Specific suggestion]
 
-        ## **🎊 RESULTS ANALYSIS**
-        [Quality of outcomes and measurable impacts shared]
-        **Results Score: X/10**
-        • Quantified Result 1: [Description with numbers]
-        • Quantified Result 2: [Description with numbers]
+        ## **⚡ ACTIONS ANALYSIS (A)**
+        **Score: X/10**
+        [Comprehensive analysis of action descriptions]
+        
+        **Action Quality Assessment:**
+        - **Specific Actions:** [Analysis with examples]
+        - **Leadership Examples:** [Analysis]
+        - **Problem-Solving Approach:** [Analysis]
 
-        ## **💡 SIGNIFICANCE ANALYSIS**
-        **Skills Demonstrated:**
-        - Leadership: [Analysis] - **Score: X/10**
-        - Problem-Solving: [Analysis] - **Score: X/10**  
-        - Communication: [Analysis] - **Score: X/10**
-        - Teamwork: [Analysis] - **Score: X/10**
-        - Adaptability: [Analysis] - **Score: X/10**
+        ## **🎊 RESULTS ANALYSIS (R)**
+        **Score: X/10**
+        [Analysis of measurable outcomes and impact]
+        
+        **Results Effectiveness:**
+        - **Quantified Results:** [Examples with numbers/metrics]
+        - **Impact Demonstration:** [Analysis]
+        - **Missing Metrics:** [Areas needing improvement]
+
+        ## **💡 SIGNIFICANCE ANALYSIS (S)**
+        **Score: X/10**
+        [Analysis of skills demonstrated and learning]
+        
+        **Skills Assessment:**
+        - **Leadership:** X/10 - [Analysis with examples]
+        - **Problem-Solving:** X/10 - [Analysis with examples]  
+        - **Communication:** X/10 - [Analysis with examples]
+        - **Teamwork:** X/10 - [Analysis with examples]
+        - **Adaptability:** X/10 - [Analysis with examples]
 
         ## **📈 OVERALL ASSESSMENT**
-        **Interview Duration Performance:** [How well they used the time]
-        **HEARS Methodology Adherence:** X/10
-        **Top 3 Strengths:** [List with specific examples]
-        **Top 3 Development Areas:** [Specific, actionable improvements]
-        **Overall Interview Score:** **X/10**
-        **Hiring Recommendation:** **[STRONG HIRE/HIRE/MAYBE/PASS]**
+        **Total HEARS Score: XX/50**
+        **Interview Rating: [EXCELLENT/STRONG HIRE/HIRE/MAYBE/NEEDS IMPROVEMENT]**
+        **Time Management: [Analysis of how well they used interview time]**
 
-        ## **🚀 IMPROVEMENT RECOMMENDATIONS**
-        **For Future Interviews:**
-        [Specific, actionable advice based on HEARS gaps]
-        
-        **For Professional Development:**
-        [Skills to develop based on responses]
+        ## **🌟 TOP STRENGTHS**
+        1. **[Strength Category]:** [Detailed analysis with specific examples from responses]
+        2. **[Strength Category]:** [Detailed analysis with specific examples from responses]
+        3. **[Strength Category]:** [Detailed analysis with specific examples from responses]
+
+        ## **🎯 PRIORITY DEVELOPMENT AREAS**
+        1. **[Development Area]:** [Specific, actionable improvement recommendations]
+        2. **[Development Area]:** [Specific, actionable improvement recommendations]
+        3. **[Development Area]:** [Specific, actionable improvement recommendations]
+
+        ## **🚀 ACTION PLAN FOR IMPROVEMENT**
+        ### **For Your Next Interview:**
+        - [Specific preparation tip 1]
+        - [Specific preparation tip 2]
+        - [Specific preparation tip 3]
+
+        ### **For Long-term Professional Development:**
+        - [Career development recommendation 1]
+        - [Career development recommendation 2]
+
+        ## **📋 HEARS METHOD MASTERY TIPS**
+        [Specific tips for better implementation of HEARS methodology based on this interview performance]
+
+        IMPORTANT: Provide specific, actionable feedback with concrete examples from their responses.
         """
         
         try:
             response = self.model.generate_content(prompt)
-            return response.text.strip()
+            feedback_text = response.text.strip()
+            
+            if not feedback_text or len(feedback_text) < 100:
+                return {
+                    'success': False,
+                    'feedback': "Unable to generate comprehensive feedback - response too short.",
+                    'error': "Insufficient feedback generated"
+                }
+            
+            return {
+                'success': True,
+                'feedback': feedback_text,
+                'error': None
+            }
+            
         except Exception as e:
-            return f"Error generating comprehensive feedback: {str(e)}"
+            error_msg = str(e)
+            return {
+                'success': False,
+                'feedback': f"**Technical Error Generating Overall Feedback:**\n\n*Error: {error_msg}*\n\nPlease try refreshing the page or contact support.",
+                'error': error_msg
+            }
     
     def _get_fallback_questions(self, num_questions: int) -> List[str]:
         """Fallback questions if API fails."""
@@ -383,9 +508,9 @@ class InterviewTimer:
         seconds = seconds % 60
         return f"{minutes:02d}:{seconds:02d}"
 
-# Session State Management
+# Session State Management - FIXED VERSION
 def initialize_session_state():
-    """Initialize all session state variables."""
+    """Initialize all session state variables - FIXED VERSION."""
     defaults = {
         'stage': 'upload',
         'resume_text': "",
@@ -396,13 +521,14 @@ def initialize_session_state():
         'current_question_idx': 0,
         'conversation': [],
         'question_responses': [],
-        'individual_feedback': [],
+        'individual_feedback': {},  # FIXED: Changed to dict for better indexing
         'overall_feedback': "",
         'interview_completed': False,
         'timer': None,
         'question_timer_start': None,
         'gemini_client': None,
-        'duration_selected': False
+        'duration_selected': False,
+        'feedback_generated': False  # FIXED: Added to track feedback generation
     }
     
     for key, value in defaults.items():
@@ -851,7 +977,7 @@ def render_details_stage():
     st.markdown('</div>', unsafe_allow_html=True)
 
 def render_interview_stage():
-    """Render interactive interview stage with timer."""
+    """Render interactive interview stage with timer - FIXED VERSION."""
     if not st.session_state.questions:
         st.error("No questions available. Please go back and regenerate questions.")
         return
@@ -949,41 +1075,65 @@ def render_interview_stage():
             
             with col2:
                 if st.form_submit_button("Skip Question", type="secondary", use_container_width=True):
-                    st.session_state.question_responses.append({
+                    # FIXED: Handle skipped questions properly
+                    response_data = {
                         'question': current_question,
                         'answer': '[Question Skipped]',
                         'question_number': st.session_state.current_question_idx + 1
-                    })
+                    }
+                    st.session_state.question_responses.append(response_data)
+                    
+                    # FIXED: Generate feedback for skipped question
+                    feedback_result = st.session_state.gemini_client.generate_individual_feedback(
+                        current_question,
+                        '[Question Skipped]',
+                        st.session_state.job_details,
+                        st.session_state.current_question_idx + 1
+                    )
+                    
+                    # FIXED: Store feedback with proper key
+                    st.session_state.individual_feedback[st.session_state.current_question_idx + 1] = feedback_result
                     
                     st.session_state.current_question_idx += 1
                     st.session_state.question_timer_start = None
                     st.rerun()
             
             if submitted and user_response.strip():
-                # Record the Q&A pair
-                st.session_state.question_responses.append({
+                # FIXED: Record the Q&A pair with better structure
+                response_data = {
                     'question': current_question,
                     'answer': user_response.strip(),
                     'question_number': st.session_state.current_question_idx + 1
-                })
+                }
+                st.session_state.question_responses.append(response_data)
                 
-                # Generate individual feedback
+                # FIXED: Generate individual feedback with better error handling
                 with st.spinner("🤖 Analyzing your response using HEARS methodology..."):
                     try:
-                        individual_feedback = st.session_state.gemini_client.generate_individual_feedback(
+                        feedback_result = st.session_state.gemini_client.generate_individual_feedback(
                             current_question,
                             user_response.strip(),
-                            st.session_state.job_details
+                            st.session_state.job_details,
+                            st.session_state.current_question_idx + 1
                         )
-                        st.session_state.individual_feedback.append({
-                            'question_number': st.session_state.current_question_idx + 1,
-                            'feedback': individual_feedback
-                        })
+                        
+                        # FIXED: Store feedback with question number as key
+                        st.session_state.individual_feedback[st.session_state.current_question_idx + 1] = feedback_result
+                        
+                        if feedback_result['success']:
+                            st.success("✅ Response analyzed successfully!")
+                        else:
+                            st.warning(f"⚠️ Feedback generation had issues: {feedback_result.get('error', 'Unknown error')}")
+                            
                     except Exception as e:
-                        st.session_state.individual_feedback.append({
+                        error_feedback = {
                             'question_number': st.session_state.current_question_idx + 1,
-                            'feedback': f"Unable to generate feedback: {str(e)}"
-                        })
+                            'success': False,
+                            'feedback': f"**Technical Error:** Unable to analyze this response due to: {str(e)}",
+                            'error': str(e)
+                        }
+                        st.session_state.individual_feedback[st.session_state.current_question_idx + 1] = error_feedback
+                        st.error(f"❌ Error analyzing response: {str(e)}")
                 
                 # Move to next question
                 st.session_state.current_question_idx += 1
@@ -1013,27 +1163,21 @@ def render_interview_stage():
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             if st.button("📊 Get My HEARS Feedback Report", type="primary", use_container_width=True):
-                with st.spinner("🤖 Generating your comprehensive HEARS methodology feedback report..."):
-                    try:
-                        overall_feedback = st.session_state.gemini_client.generate_overall_feedback(
-                            st.session_state.question_responses,
-                            st.session_state.job_details
-                        )
-                        st.session_state.overall_feedback = overall_feedback
-                        st.session_state.stage = 'feedback'
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Error generating feedback: {str(e)}")
+                st.session_state.stage = 'feedback'
+                st.rerun()
 
 def render_feedback_stage():
-    """Render comprehensive HEARS feedback report."""
+    """Render comprehensive HEARS feedback report - FIXED VERSION."""
     st.title("📊 HEARS Methodology Feedback Report")
     
     if not st.session_state.question_responses:
         st.error("No interview responses available. Please complete the interview first.")
         return
     
-    # Interview Summary
+    # FIXED: Interview Summary with better validation
+    completed_responses = [r for r in st.session_state.question_responses if r['answer'] != '[Question Skipped]']
+    skipped_responses = [r for r in st.session_state.question_responses if r['answer'] == '[Question Skipped]']
+    
     st.markdown(f"""
     <div class="feedback-card">
         <h3 style="margin-bottom: 1rem; color: var(--accent-primary);">📋 Interview Summary</h3>
@@ -1041,80 +1185,174 @@ def render_feedback_stage():
             <div><strong>Position:</strong> {st.session_state.job_details.get('job_title', 'N/A')}</div>
             <div><strong>Company:</strong> {st.session_state.job_details.get('company_name', 'N/A')}</div>
             <div><strong>Duration:</strong> {st.session_state.interview_duration} minutes</div>
-            <div><strong>Questions:</strong> {len(st.session_state.question_responses)} of {st.session_state.num_questions}</div>
+            <div><strong>Total Questions:</strong> {len(st.session_state.question_responses)}</div>
+            <div><strong>Completed:</strong> {len(completed_responses)}</div>
+            <div><strong>Skipped:</strong> {len(skipped_responses)}</div>
             <div><strong>Date:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M')}</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
-    # Individual Question Feedback
+    # FIXED: Individual Question Feedback with proper error handling
     st.subheader("📝 Individual Question Analysis")
     
     for i, response in enumerate(st.session_state.question_responses):
-        with st.expander(f"Question {response['question_number']}: Analysis", expanded=False):
+        question_num = response['question_number']
+        
+        with st.expander(f"Question {question_num}: Analysis", expanded=False):
+            # Display question and answer
             st.markdown(f"""
             <div class="feedback-individual">
-                <h4>Question:</h4>
-                <p>{response['question']}</p>
+                <h4>❓ Question:</h4>
+                <p style="background: #f0f9ff; padding: 1rem; border-radius: 5px; border-left: 4px solid #0ea5e9;">{response['question']}</p>
                 
-                <h4>Your Answer:</h4>
-                <p style="background: #f8fafc; padding: 1rem; border-radius: 5px;">{response['answer']}</p>
+                <h4>💬 Your Answer:</h4>
             </div>
             """, unsafe_allow_html=True)
             
-            if i < len(st.session_state.individual_feedback):
-                st.markdown(st.session_state.individual_feedback[i]['feedback'])
+            if response['answer'] == '[Question Skipped]':
+                st.markdown("""
+                <div style="background: #fef3c7; padding: 1rem; border-radius: 5px; border-left: 4px solid #f59e0b; color: #92400e;">
+                    <strong>⏭️ Question was skipped</strong> - No response provided for analysis.
+                </div>
+                """, unsafe_allow_html=True)
             else:
-                st.info("Individual feedback not available for this question.")
+                st.markdown(f"""
+                <div style="background: #f8fafc; padding: 1rem; border-radius: 5px; border-left: 4px solid #64748b;">
+                    {response['answer']}
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # FIXED: Display individual feedback with proper validation
+            st.markdown("#### 🎯 HEARS Analysis:")
+            
+            if question_num in st.session_state.individual_feedback:
+                feedback_data = st.session_state.individual_feedback[question_num]
+                
+                if feedback_data['success']:
+                    st.markdown(feedback_data['feedback'])
+                else:
+                    st.markdown(f"""
+                    <div style="background: #fee2e2; padding: 1rem; border-radius: 5px; border-left: 4px solid #ef4444; color: #991b1b;">
+                        <strong>❌ Feedback Generation Error</strong><br>
+                        {feedback_data['feedback']}
+                    </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                <div style="background: #e5e7eb; padding: 1rem; border-radius: 5px; border-left: 4px solid #6b7280; color: #374151;">
+                    <strong>⏳ Individual feedback not available</strong> - This may occur due to technical issues during analysis.
+                </div>
+                """, unsafe_allow_html=True)
     
     st.divider()
     
-    # Overall HEARS Feedback
+    # FIXED: Overall HEARS Feedback with better generation and validation
     st.subheader("🎯 Overall HEARS Analysis")
     
-    if st.session_state.overall_feedback:
+    # Check if overall feedback exists and is valid
+    overall_feedback_exists = (
+        st.session_state.overall_feedback and 
+        isinstance(st.session_state.overall_feedback, str) and 
+        len(st.session_state.overall_feedback.strip()) > 0
+    )
+    
+    if overall_feedback_exists:
         st.markdown('<div class="feedback-card">', unsafe_allow_html=True)
         st.markdown(st.session_state.overall_feedback)
         st.markdown('</div>', unsafe_allow_html=True)
     else:
-        st.info("Generating overall feedback...")
-        if st.button("Generate Overall Feedback"):
-            with st.spinner("🤖 Creating comprehensive HEARS analysis..."):
-                try:
-                    overall_feedback = st.session_state.gemini_client.generate_overall_feedback(
-                        st.session_state.question_responses,
-                        st.session_state.job_details
-                    )
-                    st.session_state.overall_feedback = overall_feedback
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Error generating overall feedback: {str(e)}")
+        st.info("📊 Overall feedback not yet generated. Click the button below to generate comprehensive analysis.")
+        
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            if st.button("🤖 Generate Overall HEARS Analysis", type="primary", use_container_width=True):
+                with st.spinner("🔄 Creating comprehensive HEARS methodology analysis..."):
+                    try:
+                        overall_result = st.session_state.gemini_client.generate_overall_feedback(
+                            st.session_state.question_responses,
+                            st.session_state.job_details
+                        )
+                        
+                        if overall_result['success']:
+                            st.session_state.overall_feedback = overall_result['feedback']
+                            st.success("✅ Overall feedback generated successfully!")
+                            st.rerun()
+                        else:
+                            st.error(f"❌ Error generating overall feedback: {overall_result.get('error', 'Unknown error')}")
+                            st.markdown(f"""
+                            <div style="background: #fee2e2; padding: 1rem; border-radius: 5px; border-left: 4px solid #ef4444; color: #991b1b;">
+                                <strong>Technical Error Details:</strong><br>
+                                {overall_result['feedback']}
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+                    except Exception as e:
+                        error_msg = str(e)
+                        st.error(f"❌ Unexpected error generating overall feedback: {error_msg}")
+                        st.markdown(f"""
+                        <div style="background: #fee2e2; padding: 1rem; border-radius: 5px; border-left: 4px solid #ef4444; color: #991b1b;">
+                            <strong>System Error:</strong> {error_msg}<br>
+                            Please try again or contact support if this issue persists.
+                        </div>
+                        """, unsafe_allow_html=True)
     
     # Action buttons
     st.divider()
+    st.markdown("### 🚀 Next Steps")
+    
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        if st.button("📄 Download Report", type="secondary"):
-            report_content = f"""
-# AI Interview Simulator - HEARS Methodology Report
+        if st.button("📄 Download Report", type="secondary", use_container_width=True):
+            report_content = generate_report_content()
+            st.download_button(
+                label="📥 Download Complete Report",
+                data=report_content,
+                file_name=f"interview_hears_report_{datetime.now().strftime('%Y%m%d_%H%M')}.md",
+                mime="text/markdown",
+                use_container_width=True
+            )
+    
+    with col2:
+        if st.button("🔄 Practice Again", type="primary", use_container_width=True):
+            reset_interview_session()
+            st.session_state.stage = 'details'
+            st.rerun()
+    
+    with col3:
+        if st.button("📝 New Position", type="secondary", use_container_width=True):
+            reset_for_new_position()
+            st.session_state.stage = 'details'
+            st.rerun()
+    
+    with col4:
+        if st.button("🏠 Start Over", type="secondary", use_container_width=True):
+            reset_complete_session()
+            st.rerun()
+
+# FIXED: Helper functions for better session management
+def generate_report_content() -> str:
+    """Generate comprehensive report content - FIXED VERSION."""
+    report_content = f"""# 🎯 AI Interview Simulator - HEARS Methodology Report
 
 **Interview Details:**
-- Position: {st.session_state.job_details.get('job_title', 'N/A')}
-- Company: {st.session_state.job_details.get('company_name', 'N/A')}
-- Duration: {st.session_state.interview_duration} minutes
-- Questions Completed: {len(st.session_state.question_responses)}/{st.session_state.num_questions}
-- Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}
+- **Position:** {st.session_state.job_details.get('job_title', 'N/A')}
+- **Company:** {st.session_state.job_details.get('company_name', 'N/A')}
+- **Duration:** {st.session_state.interview_duration} minutes
+- **Questions Completed:** {len([r for r in st.session_state.question_responses if r['answer'] != '[Question Skipped]'])}/{len(st.session_state.question_responses)}
+- **Date:** {datetime.now().strftime('%Y-%m-%d %H:%M')}
 
 ---
 
-## Individual Question Analysis
+## 📝 Individual Question Analysis
 
 """
-            
-            for i, response in enumerate(st.session_state.question_responses):
-                report_content += f"""
-### Question {response['question_number']}
+    
+    for response in st.session_state.question_responses:
+        question_num = response['question_number']
+        report_content += f"""
+### Question {question_num}
 
 **Question:** {response['question']}
 
@@ -1122,56 +1360,80 @@ def render_feedback_stage():
 
 **HEARS Analysis:**
 """
-                if i < len(st.session_state.individual_feedback):
-                    report_content += f"{st.session_state.individual_feedback[i]['feedback']}\n\n"
-                else:
-                    report_content += "Individual feedback not available.\n\n"
-            
-            report_content += f"""
+        if question_num in st.session_state.individual_feedback:
+            feedback_data = st.session_state.individual_feedback[question_num]
+            if feedback_data['success']:
+                report_content += f"{feedback_data['feedback']}\n\n"
+            else:
+                report_content += f"**Feedback Error:** {feedback_data['feedback']}\n\n"
+        else:
+            report_content += "Individual feedback not available for this question.\n\n"
+    
+    report_content += f"""
 ---
 
-## Overall HEARS Analysis
+## 🎯 Overall HEARS Analysis
 
 {st.session_state.overall_feedback if st.session_state.overall_feedback else 'Overall feedback not generated.'}
 
 ---
 
 *Generated by AI Interview Simulator using HEARS Methodology*
+*Report generated on {datetime.now().strftime('%Y-%m-%d at %H:%M')}*
 """
-            
-            st.download_button(
-                label="Download Complete HEARS Report",
-                data=report_content,
-                file_name=f"interview_hears_report_{datetime.now().strftime('%Y%m%d_%H%M')}.md",
-                mime="text/markdown"
-            )
     
-    with col2:
-        if st.button("🔄 Practice Again", type="primary"):
-            for key in ['stage', 'questions', 'current_question_idx', 'conversation', 'question_responses', 'individual_feedback', 'overall_feedback', 'interview_completed', 'timer', 'question_timer_start']:
-                if key in st.session_state:
-                    del st.session_state[key]
-            st.session_state.stage = 'details'
-            st.rerun()
+    return report_content
+
+def reset_interview_session():
+    """Reset session for practicing with same job details."""
+    keys_to_reset = [
+        'questions', 'current_question_idx', 'conversation', 'question_responses', 
+        'individual_feedback', 'overall_feedback', 'interview_completed', 
+        'timer', 'question_timer_start', 'feedback_generated'
+    ]
+    for key in keys_to_reset:
+        if key in st.session_state:
+            if key == 'individual_feedback':
+                st.session_state[key] = {}
+            else:
+                del st.session_state[key]
     
-    with col3:
-        if st.button("📝 New Position", type="secondary"):
-            for key in ['stage', 'job_details', 'interview_duration', 'num_questions', 'questions', 'current_question_idx', 'conversation', 'question_responses', 'individual_feedback', 'overall_feedback', 'interview_completed', 'timer', 'question_timer_start', 'duration_selected']:
-                if key in st.session_state:
-                    del st.session_state[key]
-            st.session_state.interview_duration = 15
-            st.session_state.num_questions = 3
-            st.session_state.stage = 'details'
-            st.rerun()
+    # Reset defaults
+    st.session_state.current_question_idx = 0
+    st.session_state.question_responses = []
+    st.session_state.individual_feedback = {}
+    st.session_state.interview_completed = False
+
+def reset_for_new_position():
+    """Reset session for new job position."""
+    keys_to_reset = [
+        'job_details', 'interview_duration', 'num_questions', 'questions', 
+        'current_question_idx', 'conversation', 'question_responses', 
+        'individual_feedback', 'overall_feedback', 'interview_completed', 
+        'timer', 'question_timer_start', 'duration_selected', 'feedback_generated'
+    ]
+    for key in keys_to_reset:
+        if key in st.session_state:
+            del st.session_state[key]
     
-    with col4:
-        if st.button("🏠 Start Over", type="secondary"):
-            for key in list(st.session_state.keys()):
-                if key != 'gemini_client':
-                    del st.session_state[key]
-            st.session_state.interview_duration = 15
-            st.session_state.num_questions = 3
-            st.rerun()
+    # Reset defaults
+    st.session_state.interview_duration = 15
+    st.session_state.num_questions = 3
+    st.session_state.current_question_idx = 0
+    st.session_state.question_responses = []
+    st.session_state.individual_feedback = {}
+    st.session_state.interview_completed = False
+    st.session_state.duration_selected = False
+
+def reset_complete_session():
+    """Reset entire session."""
+    keys_to_keep = ['gemini_client']
+    for key in list(st.session_state.keys()):
+        if key not in keys_to_keep:
+            del st.session_state[key]
+    
+    # Reset to initial state
+    initialize_session_state()
 
 # Main Application
 def main():
