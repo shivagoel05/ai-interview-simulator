@@ -1,5 +1,5 @@
-# AI Interview Simulator - Improved UI to match kurated.ai style
-# app.py
+# AI Interview Simulator - Kurated.ai Style
+# Simple structure: Just app.py + main.css in root directory
 
 import streamlit as st
 import google.generativeai as genai
@@ -26,595 +26,30 @@ st.set_page_config(
     page_title="AI Interview Simulator",
     page_icon="🚀",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# Custom CSS matching kurated.ai design
-def load_custom_css():
-    st.markdown("""
-    <style>
-    /* Import modern font */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    
-    /* Root variables matching kurated.ai theme */
-    :root {
-        --primary-color: #2563eb;
-        --primary-light: #3b82f6;
-        --primary-dark: #1d4ed8;
-        --secondary-color: #f59e0b;
-        --success-color: #10b981;
-        --warning-color: #f59e0b;
-        --danger-color: #ef4444;
-        --background-color: #f8fafc;
-        --surface-color: #ffffff;
-        --text-primary: #1f2937;
-        --text-secondary: #6b7280;
-        --text-muted: #9ca3af;
-        --border-color: #e5e7eb;
-        --border-light: #f3f4f6;
-        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-        --radius-sm: 6px;
-        --radius-md: 8px;
-        --radius-lg: 12px;
-    }
-    
-    /* Global reset and typography */
-    * {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    }
-    
-    /* Hide Streamlit branding */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    
-    /* Main app container */
-    .main .block-container {
-        padding: 1rem 2rem 2rem 2rem;
-        max-width: 1400px;
-        margin: 0 auto;
-    }
-    
-    /* Sidebar styling to match kurated.ai */
-    .css-1d391kg {
-        background-color: var(--surface-color);
-        border-right: 1px solid var(--border-color);
-    }
-    
-    .css-1lcbmhc {
-        background-color: var(--surface-color);
-        border-right: 1px solid var(--border-color);
-    }
-    
-    /* Header section */
-    .app-header {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
-        color: white;
-        padding: 2rem;
-        border-radius: var(--radius-lg);
-        margin-bottom: 2rem;
-        text-align: center;
-        box-shadow: var(--shadow-lg);
-    }
-    
-    .app-header h1 {
-        margin: 0;
-        font-size: 2.5rem;
-        font-weight: 700;
-        letter-spacing: -0.025em;
-    }
-    
-    .app-header p {
-        margin: 0.75rem 0 0 0;
-        font-size: 1.125rem;
-        opacity: 0.9;
-        font-weight: 400;
-    }
-    
-    /* Progress bar styling */
-    .progress-section {
-        background: var(--surface-color);
-        border-radius: var(--radius-lg);
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-        border: 1px solid var(--border-color);
-        box-shadow: var(--shadow-sm);
-    }
-    
-    .progress-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-    
-    .progress-title {
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin: 0;
-    }
-    
-    .progress-subtitle {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-        margin: 0;
-    }
-    
-    .stage-progress {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 1.5rem;
-        position: relative;
-    }
-    
-    .stage-progress::before {
-        content: '';
-        position: absolute;
-        top: 16px;
-        left: 16px;
-        right: 16px;
-        height: 2px;
-        background-color: var(--border-color);
-        z-index: 1;
-    }
-    
-    .stage-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        position: relative;
-        z-index: 2;
-        background: var(--surface-color);
-        padding: 0 0.5rem;
-    }
-    
-    .stage-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        font-size: 0.875rem;
-        margin-bottom: 0.5rem;
-        border: 2px solid var(--border-color);
-        background: var(--surface-color);
-        color: var(--text-muted);
-        transition: all 0.3s ease;
-    }
-    
-    .stage-icon.active {
-        background: var(--primary-color);
-        border-color: var(--primary-color);
-        color: white;
-    }
-    
-    .stage-icon.completed {
-        background: var(--success-color);
-        border-color: var(--success-color);
-        color: white;
-    }
-    
-    .stage-label {
-        font-size: 0.75rem;
-        font-weight: 500;
-        color: var(--text-secondary);
-        text-align: center;
-        white-space: nowrap;
-    }
-    
-    .stage-label.active {
-        color: var(--primary-color);
-        font-weight: 600;
-    }
-    
-    .stage-label.completed {
-        color: var(--success-color);
-        font-weight: 600;
-    }
-    
-    /* Timer styling */
-    .timer-container {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: var(--radius-md);
-        text-align: center;
-        margin-bottom: 1.5rem;
-        font-size: 1.125rem;
-        font-weight: 600;
-        box-shadow: var(--shadow-md);
-    }
-    
-    .timer-warning {
-        background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
-        animation: pulse 1.5s infinite;
-    }
-    
-    .timer-danger {
-        background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
-        animation: pulse 1s infinite;
-    }
-    
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.8; }
-    }
-    
-    /* Content cards */
-    .content-card {
-        background: var(--surface-color);
-        border-radius: var(--radius-lg);
-        padding: 2rem;
-        margin-bottom: 1.5rem;
-        border: 1px solid var(--border-color);
-        box-shadow: var(--shadow-sm);
-        transition: box-shadow 0.3s ease;
-    }
-    
-    .content-card:hover {
-        box-shadow: var(--shadow-md);
-    }
-    
-    .content-card h1, .content-card h2, .content-card h3 {
-        color: var(--text-primary);
-        margin-top: 0;
-    }
-    
-    .content-card h1 {
-        font-size: 1.875rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-    }
-    
-    .content-card h2 {
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin-bottom: 1rem;
-    }
-    
-    .content-card h3 {
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin-bottom: 0.75rem;
-    }
-    
-    /* Duration selection cards */
-    .duration-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1rem;
-        margin: 1rem 0;
-    }
-    
-    .duration-option {
-        background: var(--surface-color);
-        border: 2px solid var(--border-color);
-        border-radius: var(--radius-md);
-        padding: 1.5rem;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        position: relative;
-    }
-    
-    .duration-option:hover {
-        border-color: var(--primary-light);
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
-    }
-    
-    .duration-option.selected {
-        border-color: var(--primary-color);
-        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
-    }
-    
-    .duration-title {
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin-bottom: 0.5rem;
-    }
-    
-    .duration-details {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-    }
-    
-    /* Form styling */
-    .stTextInput > div > div > input {
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
-        padding: 0.75rem;
-        font-size: 0.875rem;
-        background: var(--surface-color);
-        transition: border-color 0.3s ease;
-    }
-    
-    .stTextInput > div > div > input:focus {
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
-    }
-    
-    .stTextArea > div > div > textarea {
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
-        padding: 0.75rem;
-        font-size: 0.875rem;
-        background: var(--surface-color);
-        transition: border-color 0.3s ease;
-    }
-    
-    .stTextArea > div > div > textarea:focus {
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
-    }
-    
-    .stSelectbox > div > div > div {
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
-        background: var(--surface-color);
-    }
-    
-    /* Button styling */
-    .stButton > button {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
-        color: white;
-        border: none;
-        border-radius: var(--radius-md);
-        padding: 0.75rem 1.5rem;
-        font-weight: 600;
-        font-size: 0.875rem;
-        transition: all 0.3s ease;
-        box-shadow: var(--shadow-sm);
-    }
-    
-    .stButton > button:hover {
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-md);
-        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
-    }
-    
-    .stButton > button:active {
-        transform: translateY(0);
-        box-shadow: var(--shadow-sm);
-    }
-    
-    /* Question progress indicator */
-    .question-header {
-        background: var(--surface-color);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
-        padding: 1rem 1.5rem;
-        margin-bottom: 1.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .question-number {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-    
-    .question-progress-text {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-    }
-    
-    /* Current question display */
-    .current-question {
-        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-        border: 1px solid #93c5fd;
-        border-radius: var(--radius-lg);
-        padding: 2rem;
-        margin-bottom: 1.5rem;
-    }
-    
-    .question-text {
-        font-size: 1.125rem;
-        font-weight: 500;
-        color: var(--text-primary);
-        margin-bottom: 1.5rem;
-        line-height: 1.6;
-    }
-    
-    .hears-reminder {
-        background: #f0f9ff;
-        border: 1px solid #bae6fd;
-        border-radius: var(--radius-md);
-        padding: 1rem;
-        margin-top: 1rem;
-    }
-    
-    .hears-title {
-        font-weight: 600;
-        color: var(--primary-color);
-        margin-bottom: 0.5rem;
-        font-size: 0.875rem;
-    }
-    
-    .hears-items {
-        font-size: 0.8rem;
-        color: var(--text-secondary);
-        line-height: 1.5;
-    }
-    
-    /* Success and error messages */
-    .success-message {
-        background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: var(--radius-md);
-        margin: 1rem 0;
-        font-weight: 500;
-        box-shadow: var(--shadow-sm);
-    }
-    
-    .error-message {
-        background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: var(--radius-md);
-        margin: 1rem 0;
-        font-weight: 500;
-        box-shadow: var(--shadow-sm);
-    }
-    
-    /* Feedback sections */
-    .feedback-section {
-        background: var(--surface-color);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-lg);
-        padding: 1.5rem;
-        margin: 1rem 0;
-        border-left: 4px solid var(--primary-color);
-        box-shadow: var(--shadow-sm);
-    }
-    
-    .feedback-individual {
-        background: #f8fafc;
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-md);
-        padding: 1rem;
-        margin: 1rem 0;
-        border-left: 3px solid var(--secondary-color);
-    }
-    
-    /* Sidebar enhancements */
-    .sidebar-section {
-        background: var(--surface-color);
-        border-radius: var(--radius-md);
-        padding: 1rem;
-        margin-bottom: 1rem;
-        border: 1px solid var(--border-color);
-    }
-    
-    .sidebar-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin-bottom: 0.75rem;
-    }
-    
-    .sidebar-content {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-        line-height: 1.5;
-    }
-    
-    /* Progress bar */
-    .stProgress > div > div > div > div {
-        background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
-        border-radius: 4px;
-    }
-    
-    /* File uploader */
-    .stFileUploader > div > div {
-        border: 2px dashed var(--border-color);
-        border-radius: var(--radius-md);
-        padding: 2rem;
-        text-align: center;
-        background: var(--surface-color);
-        transition: border-color 0.3s ease;
-    }
-    
-    .stFileUploader > div > div:hover {
-        border-color: var(--primary-light);
-    }
-    
-    /* Expander styling */
-    .streamlit-expanderHeader {
-        background: var(--surface-color);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
-        padding: 0.75rem 1rem;
-        font-weight: 500;
-    }
-    
-    .streamlit-expanderContent {
-        border: 1px solid var(--border-color);
-        border-top: none;
-        border-radius: 0 0 var(--radius-md) var(--radius-md);
-        background: var(--surface-color);
-    }
-    
-    /* Radio button styling */
-    .stRadio > div {
-        background: var(--surface-color);
-        padding: 1rem;
-        border-radius: var(--radius-md);
-        border: 1px solid var(--border-color);
-    }
-    
-    /* Responsive design */
-    @media (max-width: 768px) {
-        .main .block-container {
-            padding: 1rem;
-        }
-        
-        .app-header h1 {
-            font-size: 2rem;
-        }
-        
-        .app-header p {
-            font-size: 1rem;
-        }
-        
-        .content-card {
-            padding: 1.5rem;
-        }
-        
-        .duration-grid {
-            grid-template-columns: 1fr;
-        }
-        
-        .stage-progress {
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-        
-        .stage-progress::before {
-            display: none;
-        }
-    }
-    
-    /* Custom info/warning/error boxes */
-    .stAlert {
-        border-radius: var(--radius-md);
-        border: 1px solid;
-        box-shadow: var(--shadow-sm);
-    }
-    
-    .stAlert[data-baseweb="alert"][data-testid="success"] {
-        border-color: #86efac;
-        background: #f0fdf4;
-    }
-    
-    .stAlert[data-baseweb="alert"][data-testid="info"] {
-        border-color: #93c5fd;
-        background: #eff6ff;
-    }
-    
-    .stAlert[data-baseweb="alert"][data-testid="warning"] {
-        border-color: #fcd34d;
-        background: #fffbeb;
-    }
-    
-    .stAlert[data-baseweb="alert"][data-testid="error"] {
-        border-color: #fca5a5;
-        background: #fef2f2;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+# Load CSS from root directory
+def load_css():
+    """Load main.css from root directory"""
+    try:
+        with open('main.css', 'r') as f:
+            css = f.read()
+        st.markdown(f'<style>{css}</style>', unsafe_allow_html=True)
+    except FileNotFoundError:
+        st.warning("⚠️ main.css not found in root directory. Using fallback styles.")
+        # Fallback CSS
+        st.markdown("""
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .main .block-container { background: #FFF9F0; padding: 2rem; }
+        #MainMenu, footer, header { visibility: hidden; }
+        .app-header { background: linear-gradient(135deg, #F59E0B 0%, #FBB042 100%); color: white; padding: 2rem; border-radius: 16px; text-align: center; margin-bottom: 2rem; }
+        .content-card { background: white; border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #F3F4F6; }
+        .stButton > button { background: linear-gradient(135deg, #F59E0B 0%, #FBB042 100%) !important; color: white !important; border: none !important; border-radius: 50px !important; padding: 0.75rem 2rem !important; font-weight: 600 !important; }
+        </style>
+        """, unsafe_allow_html=True)
 
 # Gemini API Configuration
 class GeminiClient:
@@ -661,9 +96,6 @@ class GeminiClient:
             response = self.model.generate_content(prompt)
             questions_text = response.text.strip()
             
-            # Debug print
-            print(f"API Response: {questions_text}")
-            
             # Clean up the response text
             questions_text = questions_text.strip()
             
@@ -683,11 +115,9 @@ class GeminiClient:
                     if isinstance(questions, list) and len(questions) >= num_questions:
                         return questions[:num_questions]
                     elif isinstance(questions, list):
-                        # If we got fewer questions than expected, pad with fallback
                         fallback = self._get_fallback_questions(num_questions - len(questions))
                         return questions + fallback
-                except json.JSONDecodeError as e:
-                    print(f"JSON decode error: {e}")
+                except json.JSONDecodeError:
                     pass
             
             # Enhanced fallback parsing
@@ -696,7 +126,6 @@ class GeminiClient:
             
             for line in lines:
                 line = line.strip()
-                # Try different patterns
                 if line.startswith('"') and line.endswith('",'):
                     questions.append(line[1:-2])
                 elif line.startswith('"') and line.endswith('"'):
@@ -706,7 +135,6 @@ class GeminiClient:
                 elif line.startswith(f'{len(questions)+1}.'):
                     questions.append(line[len(f'{len(questions)+1}.'):].strip())
             
-            # If we still don't have enough questions, use fallbacks
             if len(questions) < num_questions:
                 fallback_questions = self._get_fallback_questions(num_questions - len(questions))
                 questions.extend(fallback_questions)
@@ -716,40 +144,6 @@ class GeminiClient:
         except Exception as e:
             st.error(f"Error generating questions: {str(e)}")
             return self._get_fallback_questions(num_questions)
-    
-    def get_interview_response(self, current_question: str, user_response: str, conversation_history: List) -> str:
-        """Generate interviewer response based on user's answer."""
-        history_text = "\n".join([f"{msg['role']}: {msg['content']}" for msg in conversation_history[-4:]])
-        
-        prompt = f"""
-        You are conducting a behavioral interview using the HEARS methodology. Current context:
-
-        QUESTION ASKED: {current_question}
-        CANDIDATE'S RESPONSE: {user_response}
-        CONVERSATION HISTORY: {history_text}
-
-        Based on their response, check if they covered the HEARS elements:
-        - H (Headline): Brief summary of the situation
-        - E (Events): Specific situation/challenge described
-        - A (Actions): Detailed actions they took
-        - R (Results): Outcomes and measurable impact
-        - S (Significance): Skills demonstrated and learning
-
-        Respond based on what's missing:
-        1. If missing Headlines/Events, ask for situation context
-        2. If missing Actions, ask for specific steps they took
-        3. If missing Results, ask "What was the outcome and impact?"
-        4. If missing Significance, ask about skills used or lessons learned
-        5. If response covers all HEARS elements well, acknowledge positively and indicate readiness for next question
-
-        Keep responses encouraging, professional, and focused on one follow-up at a time.
-        """
-        
-        try:
-            response = self.model.generate_content(prompt)
-            return response.text.strip()
-        except Exception as e:
-            return f"Thank you for sharing that. Could you tell me more about the specific actions you took and the results you achieved?"
     
     def generate_individual_feedback(self, question: str, answer: str, job_details: Dict) -> str:
         """Generate HEARS feedback for individual question."""
@@ -880,12 +274,10 @@ class FileProcessor:
         if uploaded_file is None:
             return False, "No file uploaded"
         
-        # Check file size (max 10MB)
         max_size = 10 * 1024 * 1024  # 10MB in bytes
         if uploaded_file.size > max_size:
             return False, f"File size ({uploaded_file.size / 1024 / 1024:.1f}MB) exceeds maximum allowed size (10MB)"
         
-        # Check file format
         allowed_extensions = ['.pdf', '.doc', '.docx', '.txt']
         file_extension = os.path.splitext(uploaded_file.name)[1].lower()
         if file_extension not in allowed_extensions:
@@ -895,7 +287,6 @@ class FileProcessor:
     
     @staticmethod
     def extract_text_from_pdf(pdf_file) -> str:
-        """Extract text from PDF file."""
         try:
             pdf_reader = PyPDF2.PdfReader(pdf_file)
             text = ""
@@ -907,7 +298,6 @@ class FileProcessor:
     
     @staticmethod
     def extract_text_from_docx(docx_file) -> str:
-        """Extract text from DOCX file."""
         try:
             doc = Document(docx_file)
             text = ""
@@ -919,7 +309,6 @@ class FileProcessor:
     
     @staticmethod
     def extract_text_from_doc(doc_file) -> str:
-        """Extract text from DOC file using mammoth."""
         try:
             result = mammoth.extract_raw_text(doc_file)
             return result.value.strip()
@@ -928,7 +317,6 @@ class FileProcessor:
     
     @staticmethod
     def extract_text_from_txt(txt_file) -> str:
-        """Extract text from TXT file."""
         try:
             return txt_file.read().decode('utf-8').strip()
         except Exception as e:
@@ -936,7 +324,6 @@ class FileProcessor:
     
     @classmethod
     def process_resume_file(cls, uploaded_file) -> tuple[bool, str]:
-        """Process uploaded resume file and extract text."""
         is_valid, message = cls.validate_file(uploaded_file)
         if not is_valid:
             return False, message
@@ -1000,29 +387,28 @@ class InterviewTimer:
 def initialize_session_state():
     """Initialize all session state variables."""
     defaults = {
-        'stage': 'upload',  # upload, details, interview, feedback
+        'stage': 'upload',
         'resume_text': "",
         'job_details': {},
-        'interview_duration': 15,  # Default to 15 minutes
-        'num_questions': 3,  # Default to 3 questions
+        'interview_duration': 15,
+        'num_questions': 3,
         'questions': [],
         'current_question_idx': 0,
         'conversation': [],
-        'question_responses': [],  # Store individual Q&A pairs
-        'individual_feedback': [],  # Store individual question feedback
+        'question_responses': [],
+        'individual_feedback': [],
         'overall_feedback': "",
         'interview_completed': False,
         'timer': None,
         'question_timer_start': None,
         'gemini_client': None,
-        'duration_selected': False  # Track if user has selected a duration
+        'duration_selected': False
     }
     
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
     
-    # Initialize Gemini client if not exists
     if st.session_state.gemini_client is None:
         try:
             st.session_state.gemini_client = GeminiClient()
@@ -1035,251 +421,162 @@ def render_header():
     st.markdown("""
     <div class="app-header">
         <h1>🚀 AI Interview Simulator</h1>
-        <p>Practice behavioral interviews with AI-powered HEARS methodology feedback</p>
+        <p>Master behavioral interviews with AI-powered HEARS methodology feedback</p>
     </div>
     """, unsafe_allow_html=True)
 
-def render_progress_bar():
-    """Render progress bar with stage indicators."""
+def render_progress_stepper():
+    """Render horizontal progress stepper."""
     stages = ['upload', 'details', 'interview', 'feedback']
     stage_names = ['Upload Resume', 'Job Details', 'Interview', 'Feedback']
-    stage_icons = ['📄', '📝', '💬', '📊']
+    stage_icons = ['📄', '📝', '🎤', '📊']
     current_stage_idx = stages.index(st.session_state.stage)
     
-    st.markdown("""
-    <div class="progress-section">
-        <div class="progress-header">
-            <h3 class="progress-title">Interview Progress</h3>
-            <p class="progress-subtitle">Follow the steps to complete your practice interview</p>
+    progress_width = (current_stage_idx / (len(stages) - 1)) * 100 if len(stages) > 1 else 0
+    
+    stepper_html = f"""
+    <div class="progress-stepper">
+        <div class="stepper-header">
+            <h2 class="stepper-title">Interview Progress</h2>
+            <p class="stepper-subtitle">Follow the steps to complete your practice interview</p>
         </div>
-        <div class="stage-progress">
-    """, unsafe_allow_html=True)
+        <div class="stepper-container">
+            <div class="stepper-line"></div>
+            <div class="stepper-progress" style="width: {progress_width}%;"></div>
+    """
     
     for i, (stage, name, icon) in enumerate(zip(stages, stage_names, stage_icons)):
         if i < current_stage_idx:
-            icon_class = "stage-icon completed"
-            label_class = "stage-label completed"
+            item_class = "completed"
+            circle_class = "completed"
             display_icon = "✓"
         elif i == current_stage_idx:
-            icon_class = "stage-icon active"
-            label_class = "stage-label active"
+            item_class = "active"
+            circle_class = "active"
             display_icon = icon
         else:
-            icon_class = "stage-icon"
-            label_class = "stage-label"
+            item_class = "locked"
+            circle_class = "locked"
             display_icon = icon
         
-        st.markdown(f"""
-            <div class="stage-item">
-                <div class="{icon_class}">{display_icon}</div>
-                <span class="{label_class}">{name}</span>
+        stepper_html += f"""
+            <div class="step-item {item_class}">
+                <div class="step-circle {circle_class}">{display_icon}</div>
+                <span class="step-label">{name}</span>
             </div>
-        """, unsafe_allow_html=True)
+        """
     
-    st.markdown("</div></div>", unsafe_allow_html=True)
-
-def render_interview_timer():
-    """Render interview timer."""
-    if st.session_state.timer and st.session_state.stage == 'interview':
-        remaining = st.session_state.timer.get_remaining_time()
-        total_duration = st.session_state.interview_duration * 60
-        
-        # Determine timer color based on remaining time
-        timer_class = "timer-container"
-        if remaining < total_duration * 0.25:  # Less than 25% time left
-            timer_class += " timer-danger"
-        elif remaining < total_duration * 0.5:  # Less than 50% time left
-            timer_class += " timer-warning"
-        
-        time_str = st.session_state.timer.format_time(remaining)
-        
-        st.markdown(f"""
-        <div class="{timer_class}">
-            ⏱️ Time Remaining: {time_str}
+    stepper_html += """
         </div>
-        """, unsafe_allow_html=True)
-        
-        # Auto-refresh timer display
-        if remaining <= 0:
-            st.session_state.interview_completed = True
-            st.session_state.stage = 'feedback'
-            st.rerun()
+    </div>
+    """
+    
+    st.markdown(stepper_html, unsafe_allow_html=True)
 
-def render_sidebar():
-    """Render sidebar with progress and controls."""
-    with st.sidebar:
-        st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
-        st.markdown('<h3 class="sidebar-title">📋 Interview Status</h3>', unsafe_allow_html=True)
-        
-        # Interview duration info
-        if st.session_state.interview_duration:
-            st.markdown(f'<div class="sidebar-content">📅 Duration: {st.session_state.interview_duration} minutes<br>📝 Questions: {st.session_state.num_questions}</div>', unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        # Current stage info
-        stage_info = {
-            'upload': "Upload your resume to get started",
-            'details': "Select duration and provide job details",
-            'interview': f"Question {min(st.session_state.current_question_idx + 1, len(st.session_state.questions))} of {len(st.session_state.questions)}" if st.session_state.questions else "Preparing interview questions...",
-            'feedback': "Review your HEARS methodology feedback"
-        }
-        
-        st.success(stage_info.get(st.session_state.stage, "Unknown stage"))
-        
-        # Resume info if uploaded
-        if st.session_state.resume_text:
-            st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
-            st.markdown('<h4 class="sidebar-title">✅ Resume Status</h4>', unsafe_allow_html=True)
-            st.markdown(f'<div class="sidebar-content">Successfully uploaded<br>Length: {len(st.session_state.resume_text)} characters</div>', unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-        
-        # Job details if provided
-        if st.session_state.job_details:
-            st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
-            st.markdown('<h4 class="sidebar-title">✅ Job Details</h4>', unsafe_allow_html=True)
-            if 'job_title' in st.session_state.job_details:
-                st.markdown(f'<div class="sidebar-content"><strong>Position:</strong> {st.session_state.job_details["job_title"]}</div>', unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-        
-        # Interview progress if in progress
-        if st.session_state.stage == 'interview' and st.session_state.questions:
-            st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
-            st.markdown('<h4 class="sidebar-title">📊 Progress</h4>', unsafe_allow_html=True)
-            
-            progress = min(st.session_state.current_question_idx / max(len(st.session_state.questions), 1), 1.0)
-            progress = max(progress, 0.0)
-            st.progress(progress)
-            
-            current_q = min(st.session_state.current_question_idx, len(st.session_state.questions))
-            st.markdown(f'<div class="sidebar-content">Completed: {current_q}/{len(st.session_state.questions)}</div>', unsafe_allow_html=True)
-            
-            # Show time per question average
-            if st.session_state.timer:
-                elapsed = st.session_state.interview_duration * 60 - st.session_state.timer.get_remaining_time()
-                if current_q > 0:
-                    avg_time = elapsed / current_q
-                    st.markdown(f'<div class="sidebar-content">Avg per question: {int(avg_time//60)}:{int(avg_time%60):02d}</div>', unsafe_allow_html=True)
-            
-            st.markdown('</div>', unsafe_allow_html=True)
-        
-        st.divider()
-        
-        # Help section
-        st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
-        st.markdown('<h4 class="sidebar-title">💡 HEARS Method Tips</h4>', unsafe_allow_html=True)
-        
-        if st.session_state.stage == 'upload':
-            st.markdown('<div class="sidebar-content">• Ensure your resume is up-to-date<br>• Include relevant experience and skills<br>• Supported formats: PDF, DOC, DOCX, TXT</div>', unsafe_allow_html=True)
-        elif st.session_state.stage == 'details':
-            st.markdown('<div class="sidebar-content">• Choose appropriate interview duration<br>• Provide detailed job description<br>• Include specific requirements</div>', unsafe_allow_html=True)
-        elif st.session_state.stage == 'interview':
-            st.markdown('<div class="sidebar-content"><strong>HEARS Method:</strong><br>• <strong>H</strong>eadline: Brief situation summary<br>• <strong>E</strong>vents: Specific challenges<br>• <strong>A</strong>ctions: Your detailed actions<br>• <strong>R</strong>esults: Measurable outcomes<br>• <strong>S</strong>ignificance: Skills & learning</div>', unsafe_allow_html=True)
-        elif st.session_state.stage == 'feedback':
-            st.markdown('<div class="sidebar-content">• Review individual question feedback<br>• Focus on HEARS methodology gaps<br>• Practice recommended improvements</div>', unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        st.divider()
-        
-        # Restart option
-        if st.button("🔄 Start New Interview", type="secondary"):
-            for key in ['stage', 'resume_text', 'job_details', 'questions', 'current_question_idx', 'conversation', 'question_responses', 'individual_feedback', 'overall_feedback', 'interview_completed', 'timer', 'question_timer_start', 'duration_selected']:
-                if key in st.session_state:
-                    del st.session_state[key]
-            # Reset defaults
-            st.session_state.interview_duration = 15
-            st.session_state.num_questions = 3
-            st.rerun()
-
-# Stage Functions
 def render_upload_stage():
     """Render resume upload stage."""
-    st.markdown('<div class="content-card">', unsafe_allow_html=True)
-    st.title("📄 Upload Your Resume")
-    st.write("Start by uploading your resume. We support PDF, DOC, DOCX, and TXT formats.")
+    st.markdown('<div class="content-card animate-fade-in">', unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="section-header">
+        <h2 class="section-title">📄 Upload Your Resume</h2>
+        <p class="section-subtitle">Start by uploading your resume to get personalized interview questions</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     uploaded_file = st.file_uploader(
         "Choose your resume file",
         type=['pdf', 'doc', 'docx', 'txt'],
-        help="Maximum file size: 10MB"
+        help="Maximum file size: 10MB. Supported formats: PDF, DOC, DOCX, TXT",
+        label_visibility="collapsed"
     )
     
     if uploaded_file is not None:
-        with st.spinner("Processing your resume..."):
+        with st.spinner("🔄 Processing your resume..."):
             success, result = FileProcessor.process_resume_file(uploaded_file)
             
             if success:
                 st.session_state.resume_text = result
-                st.markdown('<div class="success-message">✅ Resume uploaded and processed successfully!</div>', unsafe_allow_html=True)
                 
-                # Show preview
-                with st.expander("📖 Resume Preview"):
+                st.markdown("""
+                <div class="status-message status-success">
+                    <span>✅</span>
+                    <span>Resume uploaded and processed successfully!</span>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                with st.expander("📖 Resume Preview", expanded=False):
                     preview_text = result[:500] + "..." if len(result) > 500 else result
                     st.text(preview_text)
                 
-                if st.button("Continue to Job Details", type="primary"):
-                    st.session_state.stage = 'details'
-                    st.rerun()
+                col1, col2, col3 = st.columns([1, 2, 1])
+                with col2:
+                    if st.button("Continue to Job Details →", key="continue_to_details", use_container_width=True):
+                        st.session_state.stage = 'details'
+                        st.rerun()
             else:
-                st.markdown(f'<div class="error-message">❌ {result}</div>', unsafe_allow_html=True)
+                st.markdown(f"""
+                <div class="status-message status-error">
+                    <span>❌</span>
+                    <span>{result}</span>
+                </div>
+                """, unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
 
 def render_details_stage():
     """Render job details collection stage with duration selection."""
-    st.markdown('<div class="content-card">', unsafe_allow_html=True)
-    st.title("📝 Interview Setup")
-    st.write("Select your interview duration and provide job details for personalized questions.")
+    st.markdown('<div class="content-card animate-fade-in">', unsafe_allow_html=True)
     
-    # Interview Duration Selection
-    st.subheader("⏱️ Interview Duration")
-    st.write("Choose how long you'd like your practice interview to be:")
+    st.markdown("""
+    <div class="section-header">
+        <h2 class="section-title">⏱️ Interview Setup</h2>
+        <p class="section-subtitle">Configure your practice interview duration and provide job details</p>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # Duration selection with custom styling
+    # Duration Selection
+    st.markdown("### Choose Interview Duration")
+    
     duration_options = [
-        {"label": "15 Minutes", "duration": 15, "questions": 3, "desc": "Quick practice session"},
-        {"label": "30 Minutes", "duration": 30, "questions": 6, "desc": "Standard length interview"},
-        {"label": "45 Minutes", "duration": 45, "questions": 9, "desc": "Comprehensive practice"},
-        {"label": "60 Minutes", "duration": 60, "questions": 12, "desc": "Extended practice session"}
+        {"label": "Quick Practice", "duration": 15, "questions": 3, "desc": "Perfect for a quick skills check", "icon": "⚡"},
+        {"label": "Standard Interview", "duration": 30, "questions": 6, "desc": "Most common interview length", "icon": "⏰"},
+        {"label": "Comprehensive", "duration": 45, "questions": 9, "desc": "Deep dive interview practice", "icon": "📋"},
+        {"label": "Extended Session", "duration": 60, "questions": 12, "desc": "Full interview simulation", "icon": "🎯"}
     ]
     
-    # Create columns for duration selection
+    # Duration selection buttons
     cols = st.columns(len(duration_options))
-    
     for i, option in enumerate(duration_options):
         with cols[i]:
-            selected = (st.session_state.interview_duration == option["duration"] and 
-                       st.session_state.num_questions == option["questions"])
-            
-            if st.button(
-                f"{option['label']}\n({option['questions']} Questions)\n{option['desc']}", 
-                key=f"duration_{i}",
-                use_container_width=True
-            ):
+            if st.button(f"Select {option['duration']}min", key=f"dur_{i}", use_container_width=True):
                 st.session_state.interview_duration = option["duration"]
                 st.session_state.num_questions = option["questions"]
                 st.session_state.duration_selected = True
                 st.rerun()
     
     if st.session_state.duration_selected:
-        st.success(f"✅ Selected: {st.session_state.interview_duration} minutes ({st.session_state.num_questions} questions)")
+        st.markdown(f"""
+        <div class="status-message status-success">
+            <span>✅</span>
+            <span>Selected: {st.session_state.interview_duration} minutes ({st.session_state.num_questions} questions)</span>
+        </div>
+        """, unsafe_allow_html=True)
     
     st.divider()
     
     # Job Details Form
-    st.subheader("💼 Job Details")
-    st.write("Provide information about the position you're interviewing for:")
+    st.markdown("### Job Information")
     
-    with st.form("job_details_form"):
+    with st.form("job_details_form", clear_on_submit=False):
         col1, col2 = st.columns(2)
         
         with col1:
             job_title = st.text_input("Job Title *", placeholder="e.g., Senior Software Engineer")
-            company_name = st.text_input("Company Name *", placeholder="e.g., Tech Corp Inc.")
-            experience_years = st.number_input("Years of Experience Required", min_value=0, max_value=50, value=3)
+            company_name = st.text_input("Company Name *", placeholder="e.g., TechCorp Inc.")
         
         with col2:
+            experience_years = st.number_input("Years of Experience Required", min_value=0, max_value=50, value=3)
             industry = st.selectbox(
                 "Industry (Optional)",
                 ["", "Technology", "Healthcare", "Finance", "Marketing", "Sales", "Education", "Manufacturing", "Retail", "Other"]
@@ -1287,17 +584,29 @@ def render_details_stage():
         
         job_description = st.text_area(
             "Job Description *",
-            placeholder="Paste the job description here, including responsibilities, requirements, and qualifications...",
-            height=200
+            placeholder="Paste the complete job description here, including responsibilities, requirements, and qualifications...",
+            height=150
         )
         
-        submitted = st.form_submit_button("Generate Interview Questions", type="primary")
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            submitted = st.form_submit_button("🚀 Generate Interview Questions", use_container_width=True)
         
         if submitted:
             if not job_title or not company_name or not job_description:
-                st.error("Please fill in all required fields (marked with *)")
+                st.markdown("""
+                <div class="status-message status-error">
+                    <span>❌</span>
+                    <span>Please fill in all required fields (marked with *)</span>
+                </div>
+                """, unsafe_allow_html=True)
             elif not st.session_state.duration_selected:
-                st.error("Please select an interview duration first")
+                st.markdown("""
+                <div class="status-message status-error">
+                    <span>❌</span>
+                    <span>Please select an interview duration first</span>
+                </div>
+                """, unsafe_allow_html=True)
             else:
                 job_details = {
                     'job_title': job_title,
@@ -1310,8 +619,7 @@ def render_details_stage():
                 
                 st.session_state.job_details = job_details
                 
-                # Generate questions based on selected duration
-                with st.spinner(f"Generating {st.session_state.num_questions} personalized interview questions..."):
+                with st.spinner(f"🤖 Generating {st.session_state.num_questions} personalized interview questions..."):
                     try:
                         questions = st.session_state.gemini_client.generate_questions(
                             st.session_state.resume_text,
@@ -1320,17 +628,25 @@ def render_details_stage():
                         )
                         
                         st.session_state.questions = questions
-                        
-                        # Initialize timer
                         st.session_state.timer = InterviewTimer(st.session_state.interview_duration)
-                        
                         st.session_state.stage = 'interview'
-                        st.success(f"Questions generated successfully! Starting your {st.session_state.interview_duration}-minute interview with {len(questions)} questions...")
+                        
+                        st.markdown("""
+                        <div class="status-message status-success">
+                            <span>🎉</span>
+                            <span>Questions generated successfully! Starting your interview...</span>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
                         time.sleep(2)
                         st.rerun()
                     except Exception as e:
-                        st.error(f"Error generating questions: {str(e)}")
-                        st.error("Please try again or contact support if the issue persists.")
+                        st.markdown(f"""
+                        <div class="status-message status-error">
+                            <span>❌</span>
+                            <span>Error generating questions: {str(e)}</span>
+                        </div>
+                        """, unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -1344,29 +660,35 @@ def render_interview_stage():
     if st.session_state.timer and not st.session_state.timer.start_time:
         st.session_state.timer.start_interview()
     
-    # Render timer
-    render_interview_timer()
+    # Timer display
+    if st.session_state.timer:
+        remaining = st.session_state.timer.get_remaining_time()
+        total_duration = st.session_state.interview_duration * 60
+        time_str = st.session_state.timer.format_time(remaining)
+        
+        timer_class = "timer-display"
+        if remaining < total_duration * 0.25:
+            timer_class += " danger"
+        elif remaining < total_duration * 0.5:
+            timer_class += " warning"
+        
+        st.markdown(f"""
+        <div class="{timer_class}">
+            ⏱️ Time Remaining: {time_str}
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if remaining <= 0:
+            st.session_state.interview_completed = True
+            st.session_state.stage = 'feedback'
+            st.rerun()
     
     st.title("💬 Behavioral Interview")
-    
-    # Question progress indicator
-    current_q_num = min(st.session_state.current_question_idx + 1, len(st.session_state.questions))
-    progress_percent = (st.session_state.current_question_idx / len(st.session_state.questions)) * 100
-    
-    st.markdown(f"""
-    <div class="question-header">
-        <span class="question-number">Question {current_q_num} of {len(st.session_state.questions)}</span>
-        <span class="question-progress-text">Progress: {progress_percent:.0f}%</span>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Interview progress bar
-    progress = min(st.session_state.current_question_idx / len(st.session_state.questions), 1.0)
-    st.progress(progress)
     
     # Current question or completion
     if st.session_state.current_question_idx < len(st.session_state.questions):
         current_question = st.session_state.questions[st.session_state.current_question_idx]
+        question_num = st.session_state.current_question_idx + 1
         
         # Start question timer if not started
         if not st.session_state.question_timer_start:
@@ -1374,18 +696,38 @@ def render_interview_stage():
             if st.session_state.timer:
                 st.session_state.timer.start_question()
         
-        # Display current question
+        # Progress indicator
+        progress = min(st.session_state.current_question_idx / len(st.session_state.questions), 1.0)
+        st.progress(progress)
+        
+        # Current question display
         st.markdown(f"""
-        <div class="current-question">
+        <div class="current-question animate-fade-in">
+            <div class="question-number">Question {question_num}/{len(st.session_state.questions)}</div>
             <div class="question-text">{current_question}</div>
             <div class="hears-reminder">
-                <div class="hears-title">💡 HEARS Method Reminder:</div>
-                <div class="hears-items">
-                    <strong>H</strong>eadline: Brief situation summary •
-                    <strong>E</strong>vents: Specific challenges/context •
-                    <strong>A</strong>ctions: Your detailed actions •
-                    <strong>R</strong>esults: Measurable outcomes •
-                    <strong>S</strong>ignificance: Skills used & lessons learned
+                <div class="hears-title">💡 HEARS Method Guide</div>
+                <div class="hears-grid">
+                    <div class="hears-item">
+                        <span class="hears-letter">H</span>
+                        <span>Headline: Brief situation summary</span>
+                    </div>
+                    <div class="hears-item">
+                        <span class="hears-letter">E</span>
+                        <span>Events: Specific challenges/context</span>
+                    </div>
+                    <div class="hears-item">
+                        <span class="hears-letter">A</span>
+                        <span>Actions: Your detailed actions</span>
+                    </div>
+                    <div class="hears-item">
+                        <span class="hears-letter">R</span>
+                        <span>Results: Measurable outcomes</span>
+                    </div>
+                    <div class="hears-item">
+                        <span class="hears-letter">S</span>
+                        <span>Significance: Skills & lessons learned</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1403,11 +745,10 @@ def render_interview_stage():
             col1, col2 = st.columns([3, 1])
             
             with col1:
-                submitted = st.form_submit_button("Submit Answer", type="primary")
+                submitted = st.form_submit_button("Submit Answer", type="primary", use_container_width=True)
             
             with col2:
-                if st.form_submit_button("Skip Question", type="secondary"):
-                    # Record skipped question
+                if st.form_submit_button("Skip Question", type="secondary", use_container_width=True):
                     st.session_state.question_responses.append({
                         'question': current_question,
                         'answer': '[Question Skipped]',
@@ -1426,8 +767,8 @@ def render_interview_stage():
                     'question_number': st.session_state.current_question_idx + 1
                 })
                 
-                # Generate individual feedback for this question
-                with st.spinner("Analyzing your response using HEARS methodology..."):
+                # Generate individual feedback
+                with st.spinner("🤖 Analyzing your response using HEARS methodology..."):
                     try:
                         individual_feedback = st.session_state.gemini_client.generate_individual_feedback(
                             current_question,
@@ -1456,26 +797,33 @@ def render_interview_stage():
     else:
         # Interview completed
         st.session_state.interview_completed = True
+        
         st.markdown("""
-        <div class="success-message">
-            <h3>🎉 Interview Completed!</h3>
-            <p>Excellent work! You've completed all questions. Click below to get your comprehensive HEARS methodology feedback.</p>
+        <div class="content-card animate-fade-in">
+            <div style="text-align: center; padding: 2rem;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+                <h2 style="color: var(--accent-primary); margin-bottom: 1rem;">Interview Completed!</h2>
+                <p style="font-size: 1.125rem; color: var(--text-secondary); margin-bottom: 2rem;">
+                    Excellent work! You've completed all questions. Ready to get your comprehensive HEARS methodology feedback?
+                </p>
+            </div>
         </div>
         """, unsafe_allow_html=True)
         
-        if st.button("📊 Get My HEARS Feedback Report", type="primary"):
-            with st.spinner("Generating your comprehensive HEARS methodology feedback report..."):
-                try:
-                    # Generate overall feedback
-                    overall_feedback = st.session_state.gemini_client.generate_overall_feedback(
-                        st.session_state.question_responses,
-                        st.session_state.job_details
-                    )
-                    st.session_state.overall_feedback = overall_feedback
-                    st.session_state.stage = 'feedback'
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Error generating feedback: {str(e)}")
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            if st.button("📊 Get My HEARS Feedback Report", type="primary", use_container_width=True):
+                with st.spinner("🤖 Generating your comprehensive HEARS methodology feedback report..."):
+                    try:
+                        overall_feedback = st.session_state.gemini_client.generate_overall_feedback(
+                            st.session_state.question_responses,
+                            st.session_state.job_details
+                        )
+                        st.session_state.overall_feedback = overall_feedback
+                        st.session_state.stage = 'feedback'
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error generating feedback: {str(e)}")
 
 def render_feedback_stage():
     """Render comprehensive HEARS feedback report."""
@@ -1487,13 +835,15 @@ def render_feedback_stage():
     
     # Interview Summary
     st.markdown(f"""
-    <div class="feedback-section">
-        <h3>📋 Interview Summary</h3>
-        <p><strong>Position:</strong> {st.session_state.job_details.get('job_title', 'N/A')}</p>
-        <p><strong>Company:</strong> {st.session_state.job_details.get('company_name', 'N/A')}</p>
-        <p><strong>Duration:</strong> {st.session_state.interview_duration} minutes</p>
-        <p><strong>Questions Completed:</strong> {len(st.session_state.question_responses)} of {st.session_state.num_questions}</p>
-        <p><strong>Date:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M')}</p>
+    <div class="feedback-card">
+        <h3 style="margin-bottom: 1rem; color: var(--accent-primary);">📋 Interview Summary</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div><strong>Position:</strong> {st.session_state.job_details.get('job_title', 'N/A')}</div>
+            <div><strong>Company:</strong> {st.session_state.job_details.get('company_name', 'N/A')}</div>
+            <div><strong>Duration:</strong> {st.session_state.interview_duration} minutes</div>
+            <div><strong>Questions:</strong> {len(st.session_state.question_responses)} of {st.session_state.num_questions}</div>
+            <div><strong>Date:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M')}</div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -1512,7 +862,6 @@ def render_feedback_stage():
             </div>
             """, unsafe_allow_html=True)
             
-            # Display individual feedback if available
             if i < len(st.session_state.individual_feedback):
                 st.markdown(st.session_state.individual_feedback[i]['feedback'])
             else:
@@ -1524,13 +873,13 @@ def render_feedback_stage():
     st.subheader("🎯 Overall HEARS Analysis")
     
     if st.session_state.overall_feedback:
-        st.markdown('<div class="feedback-section">', unsafe_allow_html=True)
+        st.markdown('<div class="feedback-card">', unsafe_allow_html=True)
         st.markdown(st.session_state.overall_feedback)
         st.markdown('</div>', unsafe_allow_html=True)
     else:
         st.info("Generating overall feedback...")
         if st.button("Generate Overall Feedback"):
-            with st.spinner("Creating comprehensive HEARS analysis..."):
+            with st.spinner("🤖 Creating comprehensive HEARS analysis..."):
                 try:
                     overall_feedback = st.session_state.gemini_client.generate_overall_feedback(
                         st.session_state.question_responses,
@@ -1547,7 +896,6 @@ def render_feedback_stage():
     
     with col1:
         if st.button("📄 Download Report", type="secondary"):
-            # Create comprehensive downloadable report
             report_content = f"""
 # AI Interview Simulator - HEARS Methodology Report
 
@@ -1564,7 +912,6 @@ def render_feedback_stage():
 
 """
             
-            # Add individual Q&A and feedback
             for i, response in enumerate(st.session_state.question_responses):
                 report_content += f"""
 ### Question {response['question_number']}
@@ -1580,7 +927,6 @@ def render_feedback_stage():
                 else:
                     report_content += "Individual feedback not available.\n\n"
             
-            # Add overall feedback
             report_content += f"""
 ---
 
@@ -1602,7 +948,6 @@ def render_feedback_stage():
     
     with col2:
         if st.button("🔄 Practice Again", type="primary"):
-            # Reset for new interview with same job details
             for key in ['stage', 'questions', 'current_question_idx', 'conversation', 'question_responses', 'individual_feedback', 'overall_feedback', 'interview_completed', 'timer', 'question_timer_start']:
                 if key in st.session_state:
                     del st.session_state[key]
@@ -1611,11 +956,9 @@ def render_feedback_stage():
     
     with col3:
         if st.button("📝 New Position", type="secondary"):
-            # Reset everything for completely new interview
             for key in ['stage', 'job_details', 'interview_duration', 'num_questions', 'questions', 'current_question_idx', 'conversation', 'question_responses', 'individual_feedback', 'overall_feedback', 'interview_completed', 'timer', 'question_timer_start', 'duration_selected']:
                 if key in st.session_state:
                     del st.session_state[key]
-            # Reset to defaults
             st.session_state.interview_duration = 15
             st.session_state.num_questions = 3
             st.session_state.stage = 'details'
@@ -1623,11 +966,9 @@ def render_feedback_stage():
     
     with col4:
         if st.button("🏠 Start Over", type="secondary"):
-            # Complete reset
             for key in list(st.session_state.keys()):
                 if key != 'gemini_client':
                     del st.session_state[key]
-            # Reset to defaults
             st.session_state.interview_duration = 15
             st.session_state.num_questions = 3
             st.rerun()
@@ -1635,12 +976,15 @@ def render_feedback_stage():
 # Main Application
 def main():
     """Main application entry point."""
-    load_custom_css()
+    # CRITICAL: Load CSS first
+    load_css()
+    
+    # Initialize session state
     initialize_session_state()
     
+    # Render components
     render_header()
-    render_progress_bar()
-    render_sidebar()
+    render_progress_stepper()
     
     # Route to appropriate stage
     if st.session_state.stage == 'upload':
@@ -1653,15 +997,6 @@ def main():
         render_feedback_stage()
     else:
         st.error("Unknown stage. Please restart the application.")
-    
-    # Footer
-    st.markdown("---")
-    st.markdown("""
-    <div style="text-align: center; color: #6b7280; font-size: 0.875rem; padding: 1rem;">
-        Made with ❤️ using Streamlit and Google Gemini AI<br>
-        Enhanced with HEARS Methodology for comprehensive interview feedback 🚀
-    </div>
-    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
