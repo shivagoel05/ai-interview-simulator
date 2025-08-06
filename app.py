@@ -1,4 +1,4 @@
-# AI Interview Simulator - Fixed Version
+# AI Interview Simulator - Improved UI to match kurated.ai style
 # app.py
 
 import streamlit as st
@@ -29,148 +29,147 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for professional styling with timer
+# Custom CSS matching kurated.ai design
 def load_custom_css():
     st.markdown("""
     <style>
-    /* Main theme colors */
+    /* Import modern font */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    /* Root variables matching kurated.ai theme */
     :root {
-        --primary-color: #4f46e5;
-        --secondary-color: #7c3aed;
+        --primary-color: #2563eb;
+        --primary-light: #3b82f6;
+        --primary-dark: #1d4ed8;
+        --secondary-color: #f59e0b;
         --success-color: #10b981;
         --warning-color: #f59e0b;
         --danger-color: #ef4444;
         --background-color: #f8fafc;
         --surface-color: #ffffff;
-        --text-color: #1f2937;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --text-muted: #9ca3af;
         --border-color: #e5e7eb;
+        --border-light: #f3f4f6;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --radius-sm: 6px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
     }
     
-    /* Timer styling */
-    .timer-container {
-        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-        color: white;
-        padding: 1rem;
-        border-radius: 10px;
-        text-align: center;
-        margin-bottom: 1rem;
-        font-size: 1.2rem;
-        font-weight: bold;
+    /* Global reset and typography */
+    * {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
     
-    .timer-warning {
-        background: linear-gradient(90deg, var(--warning-color), #d97706);
-        animation: pulse 1s infinite;
-    }
+    /* Hide Streamlit branding */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
     
-    .timer-danger {
-        background: linear-gradient(90deg, var(--danger-color), #dc2626);
-        animation: pulse 0.5s infinite;
-    }
-    
-    @keyframes pulse {
-        0% { opacity: 1; }
-        50% { opacity: 0.7; }
-        100% { opacity: 1; }
-    }
-    
-    /* Interview duration selection */
-    .duration-card {
-        padding: 1.5rem;
-        border: 2px solid var(--border-color);
-        border-radius: 10px;
-        text-align: center;
-        transition: all 0.3s ease;
-        background: white;
-        margin-bottom: 1rem;
-    }
-    
-    .duration-card:hover {
-        border-color: var(--primary-color);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
-    }
-    
-    .duration-card.selected {
-        border-color: var(--primary-color);
-        background: linear-gradient(45deg, #f8fafc, #e0e7ff);
-    }
-    
-    /* Question progress indicator */
-    .question-progress {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: white;
-        padding: 1rem;
-        border-radius: 10px;
-        margin-bottom: 1rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    /* Main container styling */
+    /* Main app container */
     .main .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-        max-width: 1200px;
+        padding: 1rem 2rem 2rem 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
     }
     
-    /* Header styling */
-    .header {
-        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    /* Sidebar styling to match kurated.ai */
+    .css-1d391kg {
+        background-color: var(--surface-color);
+        border-right: 1px solid var(--border-color);
+    }
+    
+    .css-1lcbmhc {
+        background-color: var(--surface-color);
+        border-right: 1px solid var(--border-color);
+    }
+    
+    /* Header section */
+    .app-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
         color: white;
         padding: 2rem;
-        border-radius: 10px;
+        border-radius: var(--radius-lg);
         margin-bottom: 2rem;
         text-align: center;
+        box-shadow: var(--shadow-lg);
     }
     
-    .header h1 {
+    .app-header h1 {
         margin: 0;
         font-size: 2.5rem;
         font-weight: 700;
+        letter-spacing: -0.025em;
     }
     
-    .header p {
-        margin: 0.5rem 0 0 0;
-        font-size: 1.2rem;
+    .app-header p {
+        margin: 0.75rem 0 0 0;
+        font-size: 1.125rem;
         opacity: 0.9;
+        font-weight: 400;
     }
     
     /* Progress bar styling */
-    .progress-container {
-        background: white;
-        border-radius: 10px;
+    .progress-section {
+        background: var(--surface-color);
+        border-radius: var(--radius-lg);
         padding: 1.5rem;
         margin-bottom: 2rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
     }
     
-    .progress-bar {
-        width: 100%;
-        height: 8px;
-        background-color: #e5e7eb;
-        border-radius: 4px;
-        overflow: hidden;
-    }
-    
-    .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-        transition: width 0.3s ease;
-    }
-    
-    .stage-indicators {
+    .progress-header {
         display: flex;
         justify-content: space-between;
-        margin-top: 1rem;
+        align-items: center;
+        margin-bottom: 1rem;
     }
     
-    .stage {
+    .progress-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+    
+    .progress-subtitle {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+    
+    .stage-progress {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1.5rem;
+        position: relative;
+    }
+    
+    .stage-progress::before {
+        content: '';
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        right: 16px;
+        height: 2px;
+        background-color: var(--border-color);
+        z-index: 1;
+    }
+    
+    .stage-item {
         display: flex;
         flex-direction: column;
         align-items: center;
-        font-size: 0.875rem;
+        position: relative;
+        z-index: 2;
+        background: var(--surface-color);
+        padding: 0 0.5rem;
     }
     
     .stage-icon {
@@ -180,156 +179,439 @@ def load_custom_css():
         display: flex;
         align-items: center;
         justify-content: center;
+        font-weight: 600;
+        font-size: 0.875rem;
         margin-bottom: 0.5rem;
-        font-weight: bold;
+        border: 2px solid var(--border-color);
+        background: var(--surface-color);
+        color: var(--text-muted);
+        transition: all 0.3s ease;
     }
     
-    .stage-active {
-        background-color: var(--primary-color);
-        color: white;
-    }
-    
-    .stage-completed {
-        background-color: var(--success-color);
-        color: white;
-    }
-    
-    .stage-inactive {
-        background-color: #e5e7eb;
-        color: #6b7280;
-    }
-    
-    /* Card styling */
-    .card {
-        background: white;
-        border-radius: 10px;
-        padding: 2rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        border: 1px solid var(--border-color);
-    }
-    
-    /* Chat styling */
-    .chat-container {
-        max-height: 500px;
-        overflow-y: auto;
-        padding: 1rem;
-        background: #f8fafc;
-        border-radius: 10px;
-        margin-bottom: 1rem;
-    }
-    
-    .chat-message {
-        margin-bottom: 1rem;
-        padding: 1rem;
-        border-radius: 10px;
-        max-width: 80%;
-    }
-    
-    .user-message {
+    .stage-icon.active {
         background: var(--primary-color);
+        border-color: var(--primary-color);
         color: white;
-        margin-left: auto;
     }
     
-    .ai-message {
-        background: white;
-        color: var(--text-color);
+    .stage-icon.completed {
+        background: var(--success-color);
+        border-color: var(--success-color);
+        color: white;
+    }
+    
+    .stage-label {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        text-align: center;
+        white-space: nowrap;
+    }
+    
+    .stage-label.active {
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+    
+    .stage-label.completed {
+        color: var(--success-color);
+        font-weight: 600;
+    }
+    
+    /* Timer styling */
+    .timer-container {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: var(--radius-md);
+        text-align: center;
+        margin-bottom: 1.5rem;
+        font-size: 1.125rem;
+        font-weight: 600;
+        box-shadow: var(--shadow-md);
+    }
+    
+    .timer-warning {
+        background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
+        animation: pulse 1.5s infinite;
+    }
+    
+    .timer-danger {
+        background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+        animation: pulse 1s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+    }
+    
+    /* Content cards */
+    .content-card {
+        background: var(--surface-color);
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        margin-bottom: 1.5rem;
         border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        transition: box-shadow 0.3s ease;
+    }
+    
+    .content-card:hover {
+        box-shadow: var(--shadow-md);
+    }
+    
+    .content-card h1, .content-card h2, .content-card h3 {
+        color: var(--text-primary);
+        margin-top: 0;
+    }
+    
+    .content-card h1 {
+        font-size: 1.875rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    
+    .content-card h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .content-card h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+    }
+    
+    /* Duration selection cards */
+    .duration-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .duration-option {
+        background: var(--surface-color);
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .duration-option:hover {
+        border-color: var(--primary-light);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .duration-option.selected {
+        border-color: var(--primary-color);
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .duration-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .duration-details {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+    
+    /* Form styling */
+    .stTextInput > div > div > input {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 0.75rem;
+        font-size: 0.875rem;
+        background: var(--surface-color);
+        transition: border-color 0.3s ease;
+    }
+    
+    .stTextInput > div > div > input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+    }
+    
+    .stTextArea > div > div > textarea {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 0.75rem;
+        font-size: 0.875rem;
+        background: var(--surface-color);
+        transition: border-color 0.3s ease;
+    }
+    
+    .stTextArea > div > div > textarea:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+    }
+    
+    .stSelectbox > div > div > div {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        background: var(--surface-color);
     }
     
     /* Button styling */
     .stButton > button {
-        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
         color: white;
         border: none;
-        border-radius: 8px;
-        padding: 0.75rem 2rem;
+        border-radius: var(--radius-md);
+        padding: 0.75rem 1.5rem;
         font-weight: 600;
-        font-size: 1rem;
+        font-size: 0.875rem;
         transition: all 0.3s ease;
+        box-shadow: var(--shadow-sm);
     }
     
     .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
     }
     
-    /* Success message */
-    .success-message {
-        background: linear-gradient(90deg, var(--success-color), #059669);
-        color: white;
-        padding: 1rem;
-        border-radius: 8px;
-        margin: 1rem 0;
+    .stButton > button:active {
+        transform: translateY(0);
+        box-shadow: var(--shadow-sm);
     }
     
-    /* Error message */
-    .error-message {
-        background: linear-gradient(90deg, #ef4444, #dc2626);
-        color: white;
-        padding: 1rem;
-        border-radius: 8px;
-        margin: 1rem 0;
+    /* Question progress indicator */
+    .question-header {
+        background: var(--surface-color);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
     
-    /* Duration selection styling */
-    .duration-button {
-        background: white;
-        border: 2px solid #e5e7eb;
-        border-radius: 10px;
+    .question-number {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .question-progress-text {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+    
+    /* Current question display */
+    .current-question {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 1px solid #93c5fd;
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .question-text {
+        font-size: 1.125rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+    
+    .hears-reminder {
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+        border-radius: var(--radius-md);
         padding: 1rem;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
+        margin-top: 1rem;
+    }
+    
+    .hears-title {
+        font-weight: 600;
+        color: var(--primary-color);
         margin-bottom: 0.5rem;
+        font-size: 0.875rem;
     }
     
-    .duration-button:hover {
-        border-color: var(--primary-color);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+    .hears-items {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        line-height: 1.5;
     }
     
-    .duration-button.selected {
-        border-color: var(--primary-color);
-        background: linear-gradient(45deg, #f8fafc, #e0e7ff);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    /* Success and error messages */
+    .success-message {
+        background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: var(--radius-md);
+        margin: 1rem 0;
+        font-weight: 500;
+        box-shadow: var(--shadow-sm);
     }
     
-    /* HEARS feedback styling */
-    .hears-section {
-        background: white;
-        border-radius: 15px;
+    .error-message {
+        background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: var(--radius-md);
+        margin: 1rem 0;
+        font-weight: 500;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    /* Feedback sections */
+    .feedback-section {
+        background: var(--surface-color);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
         padding: 1.5rem;
         margin: 1rem 0;
         border-left: 4px solid var(--primary-color);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: var(--shadow-sm);
     }
     
-    .hears-individual {
+    .feedback-individual {
         background: #f8fafc;
-        border-radius: 10px;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
         padding: 1rem;
         margin: 1rem 0;
         border-left: 3px solid var(--secondary-color);
     }
     
+    /* Sidebar enhancements */
+    .sidebar-section {
+        background: var(--surface-color);
+        border-radius: var(--radius-md);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .sidebar-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+    }
+    
+    .sidebar-content {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        line-height: 1.5;
+    }
+    
+    /* Progress bar */
+    .stProgress > div > div > div > div {
+        background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+        border-radius: 4px;
+    }
+    
+    /* File uploader */
+    .stFileUploader > div > div {
+        border: 2px dashed var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 2rem;
+        text-align: center;
+        background: var(--surface-color);
+        transition: border-color 0.3s ease;
+    }
+    
+    .stFileUploader > div > div:hover {
+        border-color: var(--primary-light);
+    }
+    
+    /* Expander styling */
+    .streamlit-expanderHeader {
+        background: var(--surface-color);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 0.75rem 1rem;
+        font-weight: 500;
+    }
+    
+    .streamlit-expanderContent {
+        border: 1px solid var(--border-color);
+        border-top: none;
+        border-radius: 0 0 var(--radius-md) var(--radius-md);
+        background: var(--surface-color);
+    }
+    
+    /* Radio button styling */
+    .stRadio > div {
+        background: var(--surface-color);
+        padding: 1rem;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
+    }
+    
     /* Responsive design */
     @media (max-width: 768px) {
         .main .block-container {
-            padding-left: 1rem;
-            padding-right: 1rem;
+            padding: 1rem;
         }
         
-        .header h1 {
+        .app-header h1 {
             font-size: 2rem;
         }
         
-        .chat-message {
-            max-width: 95%;
+        .app-header p {
+            font-size: 1rem;
         }
+        
+        .content-card {
+            padding: 1.5rem;
+        }
+        
+        .duration-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .stage-progress {
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .stage-progress::before {
+            display: none;
+        }
+    }
+    
+    /* Custom info/warning/error boxes */
+    .stAlert {
+        border-radius: var(--radius-md);
+        border: 1px solid;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .stAlert[data-baseweb="alert"][data-testid="success"] {
+        border-color: #86efac;
+        background: #f0fdf4;
+    }
+    
+    .stAlert[data-baseweb="alert"][data-testid="info"] {
+        border-color: #93c5fd;
+        background: #eff6ff;
+    }
+    
+    .stAlert[data-baseweb="alert"][data-testid="warning"] {
+        border-color: #fcd34d;
+        background: #fffbeb;
+    }
+    
+    .stAlert[data-baseweb="alert"][data-testid="error"] {
+        border-color: #fca5a5;
+        background: #fef2f2;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -751,7 +1033,7 @@ def initialize_session_state():
 def render_header():
     """Render application header."""
     st.markdown("""
-    <div class="header">
+    <div class="app-header">
         <h1>🚀 AI Interview Simulator</h1>
         <p>Practice behavioral interviews with AI-powered HEARS methodology feedback</p>
     </div>
@@ -760,33 +1042,37 @@ def render_header():
 def render_progress_bar():
     """Render progress bar with stage indicators."""
     stages = ['upload', 'details', 'interview', 'feedback']
-    stage_names = ['📄 Upload Resume', '📝 Job Details', '💬 Interview', '📊 Feedback']
+    stage_names = ['Upload Resume', 'Job Details', 'Interview', 'Feedback']
+    stage_icons = ['📄', '📝', '💬', '📊']
     current_stage_idx = stages.index(st.session_state.stage)
-    progress_percentage = (current_stage_idx / (len(stages) - 1)) * 100
     
-    st.markdown(f"""
-    <div class="progress-container">
-        <div class="progress-bar">
-            <div class="progress-fill" style="width: {progress_percentage}%"></div>
+    st.markdown("""
+    <div class="progress-section">
+        <div class="progress-header">
+            <h3 class="progress-title">Interview Progress</h3>
+            <p class="progress-subtitle">Follow the steps to complete your practice interview</p>
         </div>
-        <div class="stage-indicators">
+        <div class="stage-progress">
     """, unsafe_allow_html=True)
     
-    for i, (stage, name) in enumerate(zip(stages, stage_names)):
+    for i, (stage, name, icon) in enumerate(zip(stages, stage_names, stage_icons)):
         if i < current_stage_idx:
-            icon_class = "stage-completed"
-            icon = "✓"
+            icon_class = "stage-icon completed"
+            label_class = "stage-label completed"
+            display_icon = "✓"
         elif i == current_stage_idx:
-            icon_class = "stage-active"
-            icon = str(i + 1)
+            icon_class = "stage-icon active"
+            label_class = "stage-label active"
+            display_icon = icon
         else:
-            icon_class = "stage-inactive"
-            icon = str(i + 1)
+            icon_class = "stage-icon"
+            label_class = "stage-label"
+            display_icon = icon
         
         st.markdown(f"""
-            <div class="stage">
-                <div class="stage-icon {icon_class}">{icon}</div>
-                <span>{name}</span>
+            <div class="stage-item">
+                <div class="{icon_class}">{display_icon}</div>
+                <span class="{label_class}">{name}</span>
             </div>
         """, unsafe_allow_html=True)
     
@@ -822,12 +1108,14 @@ def render_interview_timer():
 def render_sidebar():
     """Render sidebar with progress and controls."""
     with st.sidebar:
-        st.title("📋 Interview Progress")
+        st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
+        st.markdown('<h3 class="sidebar-title">📋 Interview Status</h3>', unsafe_allow_html=True)
         
         # Interview duration info
         if st.session_state.interview_duration:
-            st.info(f"📅 Interview Duration: {st.session_state.interview_duration} minutes")
-            st.info(f"📝 Total Questions: {st.session_state.num_questions}")
+            st.markdown(f'<div class="sidebar-content">📅 Duration: {st.session_state.interview_duration} minutes<br>📝 Questions: {st.session_state.num_questions}</div>', unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
         
         # Current stage info
         stage_info = {
@@ -841,43 +1129,56 @@ def render_sidebar():
         
         # Resume info if uploaded
         if st.session_state.resume_text:
-            st.success("✅ Resume uploaded successfully")
-            st.write(f"**Resume length:** {len(st.session_state.resume_text)} characters")
+            st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
+            st.markdown('<h4 class="sidebar-title">✅ Resume Status</h4>', unsafe_allow_html=True)
+            st.markdown(f'<div class="sidebar-content">Successfully uploaded<br>Length: {len(st.session_state.resume_text)} characters</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
         
         # Job details if provided
         if st.session_state.job_details:
-            st.success("✅ Job details provided")
+            st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
+            st.markdown('<h4 class="sidebar-title">✅ Job Details</h4>', unsafe_allow_html=True)
             if 'job_title' in st.session_state.job_details:
-                st.write(f"**Position:** {st.session_state.job_details['job_title']}")
+                st.markdown(f'<div class="sidebar-content"><strong>Position:</strong> {st.session_state.job_details["job_title"]}</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
         
         # Interview progress if in progress
         if st.session_state.stage == 'interview' and st.session_state.questions:
+            st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
+            st.markdown('<h4 class="sidebar-title">📊 Progress</h4>', unsafe_allow_html=True)
+            
             progress = min(st.session_state.current_question_idx / max(len(st.session_state.questions), 1), 1.0)
             progress = max(progress, 0.0)
             st.progress(progress)
             
             current_q = min(st.session_state.current_question_idx, len(st.session_state.questions))
-            st.write(f"Questions completed: {current_q}/{len(st.session_state.questions)}")
+            st.markdown(f'<div class="sidebar-content">Completed: {current_q}/{len(st.session_state.questions)}</div>', unsafe_allow_html=True)
             
             # Show time per question average
             if st.session_state.timer:
                 elapsed = st.session_state.interview_duration * 60 - st.session_state.timer.get_remaining_time()
                 if current_q > 0:
                     avg_time = elapsed / current_q
-                    st.write(f"Average time per question: {int(avg_time//60)}:{int(avg_time%60):02d}")
+                    st.markdown(f'<div class="sidebar-content">Avg per question: {int(avg_time//60)}:{int(avg_time%60):02d}</div>', unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
         
         st.divider()
         
         # Help section
-        st.subheader("💡 HEARS Method Tips")
+        st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
+        st.markdown('<h4 class="sidebar-title">💡 HEARS Method Tips</h4>', unsafe_allow_html=True)
+        
         if st.session_state.stage == 'upload':
-            st.write("• Ensure your resume is up-to-date\n• Include relevant experience and skills\n• Supported formats: PDF, DOC, DOCX, TXT")
+            st.markdown('<div class="sidebar-content">• Ensure your resume is up-to-date<br>• Include relevant experience and skills<br>• Supported formats: PDF, DOC, DOCX, TXT</div>', unsafe_allow_html=True)
         elif st.session_state.stage == 'details':
-            st.write("• Choose appropriate interview duration\n• Provide detailed job description\n• Include specific requirements")
+            st.markdown('<div class="sidebar-content">• Choose appropriate interview duration<br>• Provide detailed job description<br>• Include specific requirements</div>', unsafe_allow_html=True)
         elif st.session_state.stage == 'interview':
-            st.write("**HEARS Method:**\n• **H**eadline: Brief situation summary\n• **E**vents: Specific challenges\n• **A**ctions: Your detailed actions\n• **R**esults: Measurable outcomes\n• **S**ignificance: Skills & learning")
+            st.markdown('<div class="sidebar-content"><strong>HEARS Method:</strong><br>• <strong>H</strong>eadline: Brief situation summary<br>• <strong>E</strong>vents: Specific challenges<br>• <strong>A</strong>ctions: Your detailed actions<br>• <strong>R</strong>esults: Measurable outcomes<br>• <strong>S</strong>ignificance: Skills & learning</div>', unsafe_allow_html=True)
         elif st.session_state.stage == 'feedback':
-            st.write("• Review individual question feedback\n• Focus on HEARS methodology gaps\n• Practice recommended improvements")
+            st.markdown('<div class="sidebar-content">• Review individual question feedback<br>• Focus on HEARS methodology gaps<br>• Practice recommended improvements</div>', unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
         
         st.divider()
         
@@ -894,7 +1195,7 @@ def render_sidebar():
 # Stage Functions
 def render_upload_stage():
     """Render resume upload stage."""
-    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown('<div class="content-card">', unsafe_allow_html=True)
     st.title("📄 Upload Your Resume")
     st.write("Start by uploading your resume. We support PDF, DOC, DOCX, and TXT formats.")
     
@@ -927,7 +1228,7 @@ def render_upload_stage():
 
 def render_details_stage():
     """Render job details collection stage with duration selection."""
-    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown('<div class="content-card">', unsafe_allow_html=True)
     st.title("📝 Interview Setup")
     st.write("Select your interview duration and provide job details for personalized questions.")
     
@@ -935,41 +1236,34 @@ def render_details_stage():
     st.subheader("⏱️ Interview Duration")
     st.write("Choose how long you'd like your practice interview to be:")
     
-    # Duration selection with radio buttons for better state management
-    duration_options = {
-        "15 Minutes (3 Questions) - Quick practice": (15, 3),
-        "30 Minutes (6 Questions) - Standard length": (30, 6),
-        "45 Minutes (9 Questions) - Comprehensive": (45, 9),
-        "60 Minutes (12 Questions) - Extended practice": (60, 12)
-    }
+    # Duration selection with custom styling
+    duration_options = [
+        {"label": "15 Minutes", "duration": 15, "questions": 3, "desc": "Quick practice session"},
+        {"label": "30 Minutes", "duration": 30, "questions": 6, "desc": "Standard length interview"},
+        {"label": "45 Minutes", "duration": 45, "questions": 9, "desc": "Comprehensive practice"},
+        {"label": "60 Minutes", "duration": 60, "questions": 12, "desc": "Extended practice session"}
+    ]
     
-    # Determine current selection for radio button
-    current_selection = None
-    for option, (duration, questions) in duration_options.items():
-        if st.session_state.interview_duration == duration and st.session_state.num_questions == questions:
-            current_selection = option
-            break
+    # Create columns for duration selection
+    cols = st.columns(len(duration_options))
     
-    # If no current selection found, default to first option
-    if current_selection is None:
-        current_selection = list(duration_options.keys())[0]
-        st.session_state.interview_duration = 15
-        st.session_state.num_questions = 3
+    for i, option in enumerate(duration_options):
+        with cols[i]:
+            selected = (st.session_state.interview_duration == option["duration"] and 
+                       st.session_state.num_questions == option["questions"])
+            
+            if st.button(
+                f"{option['label']}\n({option['questions']} Questions)\n{option['desc']}", 
+                key=f"duration_{i}",
+                use_container_width=True
+            ):
+                st.session_state.interview_duration = option["duration"]
+                st.session_state.num_questions = option["questions"]
+                st.session_state.duration_selected = True
+                st.rerun()
     
-    selected_option = st.radio(
-        "Select interview duration:",
-        options=list(duration_options.keys()),
-        index=list(duration_options.keys()).index(current_selection),
-        key="duration_radio"
-    )
-    
-    # Update session state based on selection
-    duration, num_questions = duration_options[selected_option]
-    st.session_state.interview_duration = duration
-    st.session_state.num_questions = num_questions
-    st.session_state.duration_selected = True
-    
-    st.success(f"✅ Selected: {duration} minutes ({num_questions} questions)")
+    if st.session_state.duration_selected:
+        st.success(f"✅ Selected: {st.session_state.interview_duration} minutes ({st.session_state.num_questions} questions)")
     
     st.divider()
     
@@ -1002,6 +1296,8 @@ def render_details_stage():
         if submitted:
             if not job_title or not company_name or not job_description:
                 st.error("Please fill in all required fields (marked with *)")
+            elif not st.session_state.duration_selected:
+                st.error("Please select an interview duration first")
             else:
                 job_details = {
                     'job_title': job_title,
@@ -1023,11 +1319,6 @@ def render_details_stage():
                             st.session_state.num_questions
                         )
                         
-                        # Debugging: Show what questions were generated
-                        st.write(f"DEBUG: Generated {len(questions)} questions:")
-                        for i, q in enumerate(questions):
-                            st.write(f"{i+1}. {q}")
-                        
                         st.session_state.questions = questions
                         
                         # Initialize timer
@@ -1035,7 +1326,7 @@ def render_details_stage():
                         
                         st.session_state.stage = 'interview'
                         st.success(f"Questions generated successfully! Starting your {st.session_state.interview_duration}-minute interview with {len(questions)} questions...")
-                        time.sleep(3)  # Give user time to see the debug info
+                        time.sleep(2)
                         st.rerun()
                     except Exception as e:
                         st.error(f"Error generating questions: {str(e)}")
@@ -1056,14 +1347,16 @@ def render_interview_stage():
     # Render timer
     render_interview_timer()
     
-    st.title("💬 Behavioral Interview (HEARS Method)")
+    st.title("💬 Behavioral Interview")
     
     # Question progress indicator
+    current_q_num = min(st.session_state.current_question_idx + 1, len(st.session_state.questions))
     progress_percent = (st.session_state.current_question_idx / len(st.session_state.questions)) * 100
+    
     st.markdown(f"""
-    <div class="question-progress">
-        <span><strong>Question {st.session_state.current_question_idx + 1} of {len(st.session_state.questions)}</strong></span>
-        <span><strong>Progress: {progress_percent:.0f}%</strong></span>
+    <div class="question-header">
+        <span class="question-number">Question {current_q_num} of {len(st.session_state.questions)}</span>
+        <span class="question-progress-text">Progress: {progress_percent:.0f}%</span>
     </div>
     """, unsafe_allow_html=True)
     
@@ -1083,16 +1376,17 @@ def render_interview_stage():
         
         # Display current question
         st.markdown(f"""
-        <div class="card">
-            <h4>Current Question:</h4>
-            <p style="font-size: 1.1em; font-weight: 500; color: var(--primary-color);">{current_question}</p>
-            <div style="background: #f0f9ff; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
-                <strong>💡 HEARS Method Reminder:</strong><br>
-                <strong>H</strong>eadline: Brief situation summary<br>
-                <strong>E</strong>vents: Specific challenges/context<br>
-                <strong>A</strong>ctions: Your detailed actions<br>
-                <strong>R</strong>esults: Measurable outcomes<br>
-                <strong>S</strong>ignificance: Skills used & lessons learned
+        <div class="current-question">
+            <div class="question-text">{current_question}</div>
+            <div class="hears-reminder">
+                <div class="hears-title">💡 HEARS Method Reminder:</div>
+                <div class="hears-items">
+                    <strong>H</strong>eadline: Brief situation summary •
+                    <strong>E</strong>vents: Specific challenges/context •
+                    <strong>A</strong>ctions: Your detailed actions •
+                    <strong>R</strong>esults: Measurable outcomes •
+                    <strong>S</strong>ignificance: Skills used & lessons learned
+                </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1106,7 +1400,7 @@ def render_interview_stage():
                 key=f"response_{st.session_state.current_question_idx}"
             )
             
-            col1, col2 = st.columns([2, 1])
+            col1, col2 = st.columns([3, 1])
             
             with col1:
                 submitted = st.form_submit_button("Submit Answer", type="primary")
@@ -1193,7 +1487,7 @@ def render_feedback_stage():
     
     # Interview Summary
     st.markdown(f"""
-    <div class="hears-section">
+    <div class="feedback-section">
         <h3>📋 Interview Summary</h3>
         <p><strong>Position:</strong> {st.session_state.job_details.get('job_title', 'N/A')}</p>
         <p><strong>Company:</strong> {st.session_state.job_details.get('company_name', 'N/A')}</p>
@@ -1209,7 +1503,7 @@ def render_feedback_stage():
     for i, response in enumerate(st.session_state.question_responses):
         with st.expander(f"Question {response['question_number']}: Analysis", expanded=False):
             st.markdown(f"""
-            <div class="hears-individual">
+            <div class="feedback-individual">
                 <h4>Question:</h4>
                 <p>{response['question']}</p>
                 
@@ -1230,7 +1524,7 @@ def render_feedback_stage():
     st.subheader("🎯 Overall HEARS Analysis")
     
     if st.session_state.overall_feedback:
-        st.markdown('<div class="hears-section">', unsafe_allow_html=True)
+        st.markdown('<div class="feedback-section">', unsafe_allow_html=True)
         st.markdown(st.session_state.overall_feedback)
         st.markdown('</div>', unsafe_allow_html=True)
     else:
@@ -1363,7 +1657,7 @@ def main():
     # Footer
     st.markdown("---")
     st.markdown("""
-    <div style="text-align: center; color: #6b7280; font-size: 0.875rem;">
+    <div style="text-align: center; color: #6b7280; font-size: 0.875rem; padding: 1rem;">
         Made with ❤️ using Streamlit and Google Gemini AI<br>
         Enhanced with HEARS Methodology for comprehensive interview feedback 🚀
     </div>
