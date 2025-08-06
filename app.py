@@ -426,52 +426,63 @@ def render_header():
     """, unsafe_allow_html=True)
 
 def render_progress_stepper():
-    """Render horizontal progress stepper."""
+    """Render simplified progress stepper that works with Streamlit."""
     stages = ['upload', 'details', 'interview', 'feedback']
     stage_names = ['Upload Resume', 'Job Details', 'Interview', 'Feedback']
     stage_icons = ['📄', '📝', '🎤', '📊']
     current_stage_idx = stages.index(st.session_state.stage)
     
-    progress_width = (current_stage_idx / (len(stages) - 1)) * 100 if len(stages) > 1 else 0
+    # Calculate progress percentage
+    progress_value = current_stage_idx / (len(stages) - 1) if len(stages) > 1 else 0
     
-    stepper_html = f"""
-    <div class="progress-stepper">
-        <div class="stepper-header">
-            <h2 class="stepper-title">Interview Progress</h2>
-            <p class="stepper-subtitle">Follow the steps to complete your practice interview</p>
-        </div>
-        <div class="stepper-container">
-            <div class="stepper-line"></div>
-            <div class="stepper-progress" style="width: {progress_width}%;"></div>
-    """
-    
-    for i, (stage, name, icon) in enumerate(zip(stages, stage_names, stage_icons)):
-        if i < current_stage_idx:
-            item_class = "completed"
-            circle_class = "completed"
-            display_icon = "✓"
-        elif i == current_stage_idx:
-            item_class = "active"
-            circle_class = "active"
-            display_icon = icon
-        else:
-            item_class = "locked"
-            circle_class = "locked"
-            display_icon = icon
-        
-        stepper_html += f"""
-            <div class="step-item {item_class}">
-                <div class="step-circle {circle_class}">{display_icon}</div>
-                <span class="step-label">{name}</span>
-            </div>
-        """
-    
-    stepper_html += """
+    # Simple card container
+    st.markdown("""
+    <div style="background: white; border-radius: 16px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #F3F4F6;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <h2 style="font-size: 1.25rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Interview Progress</h2>
+            <p style="font-size: 0.875rem; color: #6B7280;">Follow the steps to complete your practice interview</p>
         </div>
     </div>
-    """
+    """, unsafe_allow_html=True)
     
-    st.markdown(stepper_html, unsafe_allow_html=True)
+    # Use Streamlit's native progress bar
+    st.progress(progress_value)
+    
+    # Simple step indicators using columns
+    cols = st.columns(len(stages))
+    
+    for i, (stage, name, icon) in enumerate(zip(stages, stage_names, stage_icons)):
+        with cols[i]:
+            if i < current_stage_idx:
+                # Completed step
+                st.markdown(f"""
+                <div style="text-align: center; padding: 1rem;">
+                    <div style="width: 40px; height: 40px; background: #10B981; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem auto; color: white; font-weight: 600;">
+                        ✓
+                    </div>
+                    <span style="font-size: 0.75rem; font-weight: 600; color: #374151;">{name}</span>
+                </div>
+                """, unsafe_allow_html=True)
+            elif i == current_stage_idx:
+                # Active step
+                st.markdown(f"""
+                <div style="text-align: center; padding: 1rem;">
+                    <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #F59E0B 0%, #FBB042 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem auto; color: white; font-weight: 600; box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);">
+                        {icon}
+                    </div>
+                    <span style="font-size: 0.75rem; font-weight: 600; color: #374151;">{name}</span>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                # Locked step
+                st.markdown(f"""
+                <div style="text-align: center; padding: 1rem;">
+                    <div style="width: 40px; height: 40px; background: #F3F4F6; border: 3px solid #E5E7EB; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem auto; color: #9CA3AF; font-weight: 600;">
+                        {icon}
+                    </div>
+                    <span style="font-size: 0.75rem; font-weight: 600; color: #9CA3AF;">{name}</span>
+                </div>
+                """, unsafe_allow_html=True)
 
 def render_upload_stage():
     """Render resume upload stage."""
